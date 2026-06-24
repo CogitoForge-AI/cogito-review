@@ -4,10 +4,11 @@ import os
 from pathlib import Path
 from uuid import UUID
 
+from coreview_shared.protocols import ProviderBundle
+
 from app.config import CodeReviewSettings, get_code_review_settings
 from app.providers.factory import build_providers
 from app.providers.opencode_config import build_opencode_config_from_llm_providers
-from app.providers.protocols import ProviderBundle
 from app.repositories.llm_providers import LlmProviderRepository, LlmProviderRow
 from app.repositories.repo_integrations import (
     RepoIntegrationRepository,

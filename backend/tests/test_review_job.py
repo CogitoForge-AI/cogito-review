@@ -1,16 +1,16 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from app.config import CodeReviewSettings, Settings
-from app.providers.factory import build_providers
-from app.providers.runtime.docker.job_executor import DockerJobExecutor
-from app.providers.runtime.docker.provider import DockerRuntimeProvider
-from app.providers.runtime.review_job import (
+from coreview_shared.runtime.docker.job_executor import DockerJobExecutor
+from coreview_shared.runtime.docker.provider import DockerRuntimeProvider
+from coreview_shared.runtime.review_job import (
     agent_database_url,
     build_docker_review_job_spec,
 )
-from app.providers.runtime.specs import ReviewJobRequest
+from coreview_shared.runtime.specs import ReviewJobRequest
+
+from app.config import CodeReviewSettings, Settings
+from app.providers.factory import build_providers
 
 
 def _sample_environment() -> dict[str, str]:
@@ -145,7 +145,7 @@ async def test_docker_runtime_provider_raises_on_nonzero_exit() -> None:
             )
 
 
-@patch("app.providers.runtime.docker.provider.get_docker_client")
+@patch("coreview_shared.runtime.docker.provider.get_docker_client")
 def test_build_providers_docker_runtime(mock_get_client: MagicMock) -> None:
     mock_get_client.return_value = MagicMock()
     providers = build_providers(

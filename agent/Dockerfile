@@ -30,19 +30,24 @@ ARG AGENT_DIR=agent
 
 COPY --from=uv /usr/local/bin/uv /usr/local/bin/uvx /bin/
 
-WORKDIR /app
+WORKDIR /workspace
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_NO_DEV=1 \
     UV_PYTHON_DOWNLOADS=0
 
-COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/uv.lock ./
+COPY pyproject.toml uv.lock ./
+COPY shared/ shared/
+COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/ ./${AGENT_DIR}/
+
+WORKDIR /workspace/${AGENT_DIR}
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-install-project --no-editable
 
-COPY ${AGENT_DIR}/ /app
+COPY shared/ /workspace/shared/
+COPY ${AGENT_DIR}/ /workspace/${AGENT_DIR}/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-editable
@@ -84,9 +89,9 @@ ENV PYTHONUNBUFFERED=1 \
     OPENCODE_CONFIG=/config/opencode.json \
     NEXO_COREVIEW_WORKSPACE_ROOT=/workspaces
 
-COPY --from=python-builder /app/.venv /app/.venv
-COPY --from=python-builder /app/app /app/app
-COPY --from=python-builder /app/pyproject.toml /app/pyproject.toml
+COPY --from=python-builder /workspace/.venv /app/.venv
+COPY --from=python-builder /workspace/agent/app /app/app
+COPY --from=python-builder /workspace/agent/pyproject.toml /app/pyproject.toml
 
 COPY agent/docker/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
 COPY agent/docker/opencode.agent.json /config/opencode.json

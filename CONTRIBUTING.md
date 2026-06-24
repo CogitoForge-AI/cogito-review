@@ -42,7 +42,7 @@ make dev
 | http://localhost:8000/docs | OpenAPI / Swagger |
 | http://localhost:8000/api/v1/health | Health check |
 
-`make dev-watch` merges [`docker-compose.yaml`](docker-compose.yaml) with [`docker-compose.override.yaml`](docker-compose.override.yaml). Bind mounts enable instant reload; `develop.watch` rebuilds images when `uv.lock` or `yarn.lock` change.
+`make dev-watch` merges [`docker-compose.yaml`](docker-compose.yaml) with [`docker-compose.override.yaml`](docker-compose.override.yaml). Bind mounts enable instant reload; `develop.watch` rebuilds images when root `uv.lock` or `yarn.lock` change. After changing Python dependencies in `shared/`, `backend/`, or `agent/`, run `uv lock` from the repo root.
 
 On Docker Desktop (macOS/Windows), set `CHOKIDAR_USEPOLLING=true` in `.env` if HMR misses file changes.
 

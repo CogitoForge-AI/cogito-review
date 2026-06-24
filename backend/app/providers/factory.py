@@ -1,16 +1,17 @@
 from functools import lru_cache
 
+from coreview_shared.protocols import ProviderBundle
+from coreview_shared.providers.ci.github import GitHubCIProvider
+from coreview_shared.providers.git.github import GitHubProvider
+from coreview_shared.runtime.docker.provider import DockerRuntimeProvider
+from coreview_shared.runtime.k8s.provider import K8sRuntimeProvider
+
 from app.config import (
     CodeReviewSettings,
     Settings,
     get_code_review_settings,
     get_settings,
 )
-from app.providers.ci.github import GitHubCIProvider
-from app.providers.git.github import GitHubProvider
-from app.providers.protocols import ProviderBundle
-from app.providers.runtime.docker.provider import DockerRuntimeProvider
-from app.providers.runtime.k8s.provider import K8sRuntimeProvider
 
 _GIT_PROVIDERS: dict[str, type[GitHubProvider]] = {
     "github": GitHubProvider,

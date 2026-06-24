@@ -22,27 +22,32 @@ ARG BACKEND_DIR
 
 COPY --from=uv /uv /uvx /bin/
 
-WORKDIR /app
+WORKDIR /workspace
 
 ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=0 \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/workspace/.venv/bin:$PATH"
 
-COPY ${BACKEND_DIR}/pyproject.toml ${BACKEND_DIR}/uv.lock ./
+COPY pyproject.toml uv.lock ./
+COPY shared/ shared/
+COPY ${BACKEND_DIR}/pyproject.toml ${BACKEND_DIR}/ ./${BACKEND_DIR}/
+
+WORKDIR /workspace/${BACKEND_DIR}
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-groups --no-install-project
 
-COPY ${BACKEND_DIR}/ ./
+COPY shared/ /workspace/shared/
+COPY ${BACKEND_DIR}/ /workspace/${BACKEND_DIR}/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-groups
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--reload", "--reload-dir", "app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--reload", "--reload-dir", "app", "--reload-dir", "/workspace/shared/coreview_shared", "--host", "0.0.0.0", "--port", "8000"]
 
 # =============================================================================
 # Stage: web — Node + Vite HMR (source bind-mounted at runtime)
@@ -72,20 +77,25 @@ ARG AGENT_DIR=agent
 
 COPY --from=uv /uv /uvx /bin/
 
-WORKDIR /app
+WORKDIR /workspace
 
 ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=0 \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/workspace/.venv/bin:$PATH"
 
-COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/uv.lock ./
+COPY pyproject.toml uv.lock ./
+COPY shared/ shared/
+COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/ ./${AGENT_DIR}/
+
+WORKDIR /workspace/${AGENT_DIR}
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-groups --no-install-project
 
-COPY ${AGENT_DIR}/ ./
+COPY shared/ /workspace/shared/
+COPY ${AGENT_DIR}/ /workspace/${AGENT_DIR}/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-groups

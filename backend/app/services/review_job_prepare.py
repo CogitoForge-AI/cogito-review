@@ -1,8 +1,9 @@
 import json
 from uuid import UUID
 
+from coreview_shared.runtime.specs import ReviewJobRequest
+
 from app.config import CodeReviewSettings, get_code_review_settings
-from app.providers.runtime.specs import ReviewJobRequest
 from app.repositories.llm_providers import LlmProviderRow
 from app.repositories.repo_integrations import (
     RepoIntegrationRepository,

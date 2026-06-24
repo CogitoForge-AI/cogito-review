@@ -4,8 +4,11 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from coreview_shared.schemas.review_callback import (
+    ReviewCallbackError,
+    ReviewCallbackRequest,
+)
 
-from app.schemas.review_callback import ReviewCallbackError, ReviewCallbackRequest
 from app.services.review_callback import (
     ReviewCallbackClient,
     sign_payload,

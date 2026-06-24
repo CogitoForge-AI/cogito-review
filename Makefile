@@ -53,6 +53,7 @@ openapi:
 	cd frontend && yarn openapi:generate
 
 lint:
+	cd shared && uv run ruff check . && uv run ruff format --check .
 	cd backend && uv run ruff check . && uv run ruff format --check .
 	cd agent && uv run ruff check . && uv run ruff format --check .
 	cd frontend && yarn lint && yarn typecheck
@@ -62,5 +63,6 @@ test:
 	cd backend && uv run pytest -m integration
 
 test-unit:
+	cd shared && uv run pytest
 	cd backend && uv run pytest -m "not integration"
 	cd agent && uv run pytest

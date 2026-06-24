@@ -38,14 +38,16 @@ cd agent && uv run coreview-agent review run --review-id <uuid>  # one-shot revi
 
 ### Provider abstractions
 
-Keep implementations swappable behind protocols in `backend/app/providers/`:
+Protocols, GitHub Git/CI implementations, runtime specs (Docker/K8s), OpenCode LLM provider, and callback schemas live in **`shared/`** (`coreview-shared` package). Backend and agent wire them via local `factory.py` and app-specific config.
 
-| Module | Purpose |
+| Module (in `coreview_shared`) | Purpose |
 |--------|---------|
-| LLM | OpenAI-compatible providers via OpenCode |
-| Git | GitHub (clone, diff, webhook) |
-| CI | GitHub Actions status |
-| Runtime | Docker (Kubernetes planned) |
+| `llm/opencode` | OpenCode CLI review runner |
+| `providers/git`, `providers/ci` | GitHub clone, diff, webhook, CI summary |
+| `runtime/docker`, `runtime/k8s` | Job execution and workspace isolation |
+| `schemas/review_callback` | Agent callback contract (v1) |
+
+Backend-specific: `backend/app/providers/factory.py`, `opencode_config.py` (multi-provider DB merge). Agent-specific: `agent/app/providers/factory.py`, MCP toolbase in `agent/app/toolbase/`.
 
 Agent skills bundled into the Docker image live in `agent/skills/` (OpenCode). IDE/dev skills remain in `.agents/skills/`. MCP tools are in `agent/app/toolbase/`.
 
@@ -53,6 +55,7 @@ Agent skills bundled into the Docker image live in `agent/skills/` (OpenCode). I
 
 - Docker Compose v2.22+ (`watch` support for file sync)
 - [uv](https://docs.astral.sh/uv/) and Node.js 22+ only for host-side lint/test/openapi tasks
+- Python deps are managed as a **uv workspace** (`pyproject.toml` + `uv.lock` at repo root). Run `uv lock` from the repo root after changing dependencies in `shared/`, `backend/`, or `agent/`.
 
 ## Setup commands
 
@@ -93,13 +96,15 @@ On Docker Desktop (macOS/Windows), set `CHOKIDAR_USEPOLLING=true` in `.env` if H
 ## Project structure
 
 ```
+shared/                 # coreview-shared — protocols, providers, callback schemas (not a runtime service)
+  coreview_shared/
 backend/
   app/
     api/v1/           # Versioned HTTP routes
     repositories/     # asyncpg data access (dataclass rows)
     schemas/          # Pydantic request/response models
     services/         # Business logic
-    providers/        # Swappable LLM, Git, CI, runtime adapters
+    providers/        # factory + OpenCode config merge (implementations in coreview_shared)
     jobs/             # Celery tasks
     cli/              # Typer commands
   migrations/         # dbmate SQL (-- migrate:up / migrate:down)
@@ -109,7 +114,7 @@ agent/
   app/
     mcp/              # MCP server (FastMCP)
     toolbase/         # Git/CI MCP tool handlers
-    providers/        # GitHub Git + CI adapters
+    providers/        # factory wiring from env
     repositories/     # repo_integrations (per-repo credentials)
     cli/              # coreview-agent Typer CLI
   docker/             # entrypoint + default opencode config

@@ -2,35 +2,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from app.config import CodeReviewSettings, get_code_review_settings
-from app.providers.mcp_config import (
+from coreview_shared.opencode.config import (
     build_code_reviewer_agent_config,
     build_mcp_config,
+    llm_provider_block,
 )
 
-
-def _llm_provider_block(
-    provider_id: str,
-    model_id: str,
-    *,
-    base_url: str,
-    api_key: str,
-) -> dict[str, Any]:
-    return {
-        provider_id: {
-            "npm": "@ai-sdk/openai-compatible",
-            "name": "OpenAI Compatible API",
-            "options": {
-                "baseURL": base_url,
-                "apiKey": api_key,
-            },
-            "models": {
-                model_id: {
-                    "name": model_id,
-                }
-            },
-        }
-    }
+from app.config import CodeReviewSettings, get_code_review_settings
 
 
 def build_opencode_config(settings: CodeReviewSettings | None = None) -> dict[str, Any]:
@@ -41,11 +19,11 @@ def build_opencode_config(settings: CodeReviewSettings | None = None) -> dict[st
 
     return {
         "$schema": "https://opencode.ai/config.json",
-        "mcp": build_mcp_config(cfg),
+        "mcp": build_mcp_config(),
         "tools": {
             "bash": False,
         },
-        "provider": _llm_provider_block(
+        "provider": llm_provider_block(
             cfg.llm_provider_id,
             cfg.llm_model,
             base_url="{env:NEXO_COREVIEW_LLM_BASE_URL}",
@@ -62,7 +40,7 @@ def merge_llm_provider_blocks(
 ) -> dict[str, Any]:
     merged: dict[str, Any] = {}
     for row in providers:
-        block = _llm_provider_block(
+        block = llm_provider_block(
             row.provider_id,
             row.model,
             base_url=row.base_url,
@@ -99,7 +77,7 @@ def build_opencode_config_from_llm_providers(
 
     return {
         "$schema": "https://opencode.ai/config.json",
-        "mcp": build_mcp_config(infra),
+        "mcp": build_mcp_config(),
         "tools": {
             "bash": False,
         },
@@ -122,11 +100,11 @@ def build_opencode_config_from_integration_row(
 
     return {
         "$schema": "https://opencode.ai/config.json",
-        "mcp": build_mcp_config(infra),
+        "mcp": build_mcp_config(),
         "tools": {
             "bash": False,
         },
-        "provider": _llm_provider_block(
+        "provider": llm_provider_block(
             integration.llm_provider_id,
             integration.llm_model,
             base_url=integration.llm_base_url,

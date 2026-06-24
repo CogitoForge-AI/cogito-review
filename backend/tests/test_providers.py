@@ -5,17 +5,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
-
-from app.config import CodeReviewSettings
-from app.providers.git.diff_lines import filter_inline_comments, parse_commentable_lines
-from app.providers.git.github import HANDLED_WEBHOOK_ACTIONS, GitHubProvider
-from app.providers.protocols import (
+from coreview_shared.protocols import (
     InlineComment,
     InlineCommentsResult,
     Workspace,
     WorkspaceSpec,
 )
-from app.providers.runtime.docker.command_runner import DockerCommandRunner
+from coreview_shared.providers.git.diff_lines import (
+    filter_inline_comments,
+    parse_commentable_lines,
+)
+from coreview_shared.providers.git.github import HANDLED_WEBHOOK_ACTIONS, GitHubProvider
+from coreview_shared.runtime.docker.command_runner import DockerCommandRunner
+
+from app.config import CodeReviewSettings
 
 
 def test_github_webhook_signature_valid() -> None:
@@ -282,7 +285,9 @@ def test_provider_factory_github_docker() -> None:
     )
     assert providers.git is not None
     assert providers.runtime is not None
-    with patch("app.providers.runtime.docker.provider.get_docker_client") as get_client:
+    with patch(
+        "coreview_shared.runtime.docker.provider.get_docker_client"
+    ) as get_client:
         get_client.return_value = MagicMock()
         assert providers.runtime.command_runner() is not None
 
@@ -315,7 +320,7 @@ def test_docker_command_runner_invokes_client() -> None:
 
 
 def test_docker_client_uses_explicit_host() -> None:
-    from app.providers.runtime.docker import client as docker_client
+    from coreview_shared.runtime.docker import client as docker_client
 
     docker_client.reset_docker_client()
     mock_client = MagicMock()

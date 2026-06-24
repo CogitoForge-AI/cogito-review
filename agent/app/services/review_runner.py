@@ -2,21 +2,22 @@ import logging
 import shutil
 from pathlib import Path
 
-from app.config import clear_agent_settings_cache, get_agent_settings
-from app.providers.factory import build_providers_from_env
-from app.providers.llm.opencode import OpenCodeLLMProvider
-from app.providers.protocols import (
+from coreview_shared.llm.opencode import OpenCodeLLMProvider
+from coreview_shared.protocols import (
     InlineComment,
     ReviewFinding,
     Workspace,
     WorkspaceSpec,
 )
-from app.providers.runtime.command_runner import LocalCommandRunner
-from app.schemas.review_callback import (
+from coreview_shared.runtime.command_runner import LocalCommandRunner
+from coreview_shared.schemas.review_callback import (
     ReviewCallbackError,
     ReviewCallbackGithubResult,
     ReviewCallbackResult,
 )
+
+from app.config import clear_agent_settings_cache, get_agent_settings
+from app.providers.factory import build_providers_from_env
 from app.services.opencode_config import materialize_opencode_config
 from app.services.review_callback import (
     ReviewCallbackClient,

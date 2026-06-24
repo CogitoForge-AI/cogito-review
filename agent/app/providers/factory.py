@@ -1,7 +1,8 @@
+from coreview_shared.protocols import ProviderBundle
+from coreview_shared.providers.ci.github import GitHubCIProvider
+from coreview_shared.providers.git.github import GitHubProvider
+
 from app.config import AgentSettings, get_agent_settings
-from app.providers.ci.github import GitHubCIProvider
-from app.providers.git.github import GitHubProvider
-from app.providers.protocols import ProviderBundle
 
 _GIT_PROVIDERS: dict[str, type[GitHubProvider]] = {
     "github": GitHubProvider,

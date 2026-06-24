@@ -1,8 +1,9 @@
 import logging
 from uuid import UUID
 
+from coreview_shared.schemas.review_callback import ReviewCallbackEvent
+
 from app.repositories.reviews import ReviewRepository
-from app.schemas.review_callback import ReviewCallbackEvent
 
 logger = logging.getLogger(__name__)
 

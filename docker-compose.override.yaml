@@ -23,10 +23,14 @@ services:
       NEXO_COREVIEW_AGENT_CALLBACK_URL: http://api:8000/api/v1/agent/review-events
       NEXO_COREVIEW_AGENT_CALLBACK_SECRET: ${NEXO_COREVIEW_AGENT_CALLBACK_SECRET:-dev-callback-secret}
     volumes:
-      - ./backend:/app
-      - backend_venv:/app/.venv
+      - ./backend:/workspace/backend
+      - ./shared:/workspace/shared
+      - ./pyproject.toml:/workspace/pyproject.toml
+      - ./uv.lock:/workspace/uv.lock
+      - backend_venv:/workspace/.venv
       - review_workspaces:/workspaces
       - ./opencode.generated.json:/config/opencode.generated.json
+    working_dir: /workspace/backend
     networks:
       - coreview
     depends_on:
@@ -43,13 +47,22 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./backend/uv.lock
+          path: ./uv.lock
+        - action: sync+restart
+          path: ./pyproject.toml
+          target: /workspace/pyproject.toml
         - action: sync+restart
           path: ./backend/pyproject.toml
-          target: /app/pyproject.toml
+          target: /workspace/backend/pyproject.toml
         - action: sync
           path: ./backend/app
-          target: /app/app
+          target: /workspace/backend/app
+          ignore:
+            - "**/__pycache__/"
+            - "**/*.pyc"
+        - action: sync
+          path: ./shared/coreview_shared
+          target: /workspace/shared/coreview_shared
           ignore:
             - "**/__pycache__/"
             - "**/*.pyc"
@@ -114,10 +127,14 @@ services:
       NEXO_COREVIEW_AGENT_CALLBACK_URL: http://api:8000/api/v1/agent/review-events
       NEXO_COREVIEW_AGENT_CALLBACK_SECRET: ${NEXO_COREVIEW_AGENT_CALLBACK_SECRET:-dev-callback-secret}
     volumes:
-      - ./backend:/app
-      - backend_venv:/app/.venv
+      - ./backend:/workspace/backend
+      - ./shared:/workspace/shared
+      - ./pyproject.toml:/workspace/pyproject.toml
+      - ./uv.lock:/workspace/uv.lock
+      - backend_venv:/workspace/.venv
       - review_workspaces:/workspaces
       - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace/backend
     networks:
       - coreview
     depends_on: !reset

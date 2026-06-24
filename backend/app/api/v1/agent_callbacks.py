@@ -1,12 +1,12 @@
 import logging
 
 import asyncpg
+from coreview_shared.schemas.review_callback import ReviewCallbackEvent
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.responses import Response
 
 from app.config import get_code_review_settings
 from app.dependencies import get_conn
-from app.schemas.review_callback import ReviewCallbackEvent
 from app.services.review_callback_auth import verify_payload_signature
 from app.services.review_callback_handler import handle_review_callback
 

@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import hmac
 import json
 import logging
 from datetime import UTC, datetime
 
 import httpx
-
-from app.config import AgentSettings, get_agent_settings, get_settings
-from app.providers.protocols import PRMetadata, ReviewFinding
-from app.schemas.review_callback import (
+from coreview_shared.auth.callback_hmac import sign_payload
+from coreview_shared.protocols import PRMetadata, ReviewFinding
+from coreview_shared.schemas.review_callback import (
     ReviewCallbackAgent,
     ReviewCallbackError,
     ReviewCallbackEvent,
@@ -21,23 +18,13 @@ from app.schemas.review_callback import (
     ReviewCallbackResult,
 )
 
+from app.config import AgentSettings, get_agent_settings, get_settings
+
 logger = logging.getLogger(__name__)
 
 SIGNATURE_HEADER = "X-Review-Signature-256"
 MAX_RETRIES = 3
 RETRY_BACKOFF_SECONDS = (1.0, 2.0, 4.0)
-
-
-def sign_payload(body: bytes, secret: str) -> str:
-    digest = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-    return f"sha256={digest}"
-
-
-def verify_payload_signature(body: bytes, signature: str | None, secret: str) -> bool:
-    if not secret or not signature or not signature.startswith("sha256="):
-        return False
-    expected = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(signature.removeprefix("sha256="), expected)
 
 
 def parse_callback_metadata(raw: str) -> dict:

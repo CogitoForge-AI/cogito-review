@@ -1,4 +1,4 @@
-from app.providers.protocols import InlineComment, ReviewFinding
+from coreview_shared.protocols import InlineComment, ReviewFinding
 
 
 def split_findings(

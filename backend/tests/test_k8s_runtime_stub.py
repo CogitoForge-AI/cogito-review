@@ -1,9 +1,9 @@
 import pytest
+from coreview_shared.runtime.k8s.provider import K8sRuntimeProvider
+from coreview_shared.runtime.specs import ReviewJobRequest
 
 from app.config import CodeReviewSettings, Settings
 from app.providers.factory import build_providers
-from app.providers.runtime.k8s.provider import K8sRuntimeProvider
-from app.providers.runtime.specs import ReviewJobRequest
 
 
 @pytest.mark.asyncio
