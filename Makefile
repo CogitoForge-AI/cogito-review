@@ -5,6 +5,8 @@ include .env
 export
 endif
 
+export NEXO_COREVIEW_PROJECT_DIR ?= $(CURDIR)
+
 DATABASE_URL ?= postgresql://app:app@localhost:5432/app?sslmode=disable
 COMPOSE := docker compose
 COMPOSE_PROD := docker compose -f docker-compose.yaml

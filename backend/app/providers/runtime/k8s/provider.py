@@ -4,23 +4,28 @@ import shutil
 from pathlib import Path
 
 from app.providers.protocols import CommandRunner, Workspace, WorkspaceSpec
-from app.providers.runtime.command_runner import DockerCommandRunner
-from app.providers.runtime.docker_client import get_docker_client
+from app.providers.runtime.k8s.job_executor import K8sJobExecutor
+from app.providers.runtime.specs import ReviewJobRequest
 
 logger = logging.getLogger(__name__)
 
 
-class DockerRuntimeProvider:
+class K8sRuntimeProvider:
     def __init__(
         self,
+        *,
         workspace_root: str,
-        docker_host: str | None = None,
-        git_image: str = "alpine/git:latest",
+        agent_image: str = "nexo-coreview-agent:dev",
+        database_url: str = "",
+        k8s_namespace: str = "coreview",
+        k8s_agent_config_configmap: str = "opencode-config",
     ) -> None:
         self._workspace_root = Path(workspace_root)
-        self._docker_host = docker_host
-        self._git_image = git_image
-        self._runner: DockerCommandRunner | None = None
+        self._agent_image = agent_image
+        self._database_url = database_url
+        self._k8s_namespace = k8s_namespace
+        self._k8s_agent_config_configmap = k8s_agent_config_configmap
+        self._job_executor = K8sJobExecutor()
 
     async def prepare_workspace(self, spec: WorkspaceSpec) -> Workspace:
         return await asyncio.to_thread(self._prepare_workspace_sync, spec)
@@ -29,14 +34,11 @@ class DockerRuntimeProvider:
         await asyncio.to_thread(self._cleanup_sync, workspace.path)
 
     def command_runner(self) -> CommandRunner:
-        if self._runner is None:
-            client = get_docker_client(self._docker_host)
-            self._runner = DockerCommandRunner(
-                client=client,
-                git_image=self._git_image,
-                workspace_root=self._workspace_root,
-            )
-        return self._runner
+        msg = "K8s runtime command_runner not implemented yet"
+        raise NotImplementedError(msg)
+
+    async def run_review_job(self, request: ReviewJobRequest) -> None:
+        raise NotImplementedError("K8s runtime not implemented yet")
 
     def _prepare_workspace_sync(self, spec: WorkspaceSpec) -> Workspace:
         path = self._workspace_root / spec.review_id

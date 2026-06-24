@@ -53,24 +53,30 @@ def serve(
 ) -> None:
     """Start the Nexo Co-Review MCP server (coreview Git/CI tools)."""
 
-    async def _setup() -> ToolContext:
+    async def _run() -> None:
         ctx = await _resolve_tool_context()
         if port is not None:
             infra = AgentSettings(
                 **{**ctx.infra.model_dump(), "mcp_server_port": port}
             )
             ctx = ToolContext(infra=infra, pool=ctx.pool, providers=ctx.providers)
-        return ctx
+        mcp = create_mcp_server(ctx)
+        bind_host = host if host is not None else ctx.infra.mcp_bind_host
+        bind_port = port if port is not None else ctx.infra.mcp_server_port
+        mcp.settings.host = bind_host
+        mcp.settings.port = bind_port
 
-    ctx = asyncio.run(_setup())
-    mcp = create_mcp_server(ctx)
-    bind_host = host if host is not None else ctx.infra.mcp_bind_host
-    bind_port = port if port is not None else ctx.infra.mcp_server_port
-    mcp.settings.host = bind_host
-    mcp.settings.port = bind_port
+        logger.info("Starting MCP server transport=%s", transport)
+        try:
+            if transport == "stdio":
+                await mcp.run_stdio_async()
+            else:
+                await mcp.run_sse_async()
+        finally:
+            if ctx.pool is not None:
+                await ctx.pool.close()
 
-    logger.info("Starting MCP server transport=%s", transport)
-    mcp.run(transport=transport)
+    asyncio.run(_run())
 
 
 def main() -> None:

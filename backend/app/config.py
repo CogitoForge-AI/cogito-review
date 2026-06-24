@@ -36,7 +36,7 @@ class CodeReviewSettings(BaseSettings):
     runtime_provider: str = "docker"
     workspace_root: str = "/workspaces"
     workspace_image: str = ""
-    # Empty = auto-detect socket (macOS/Linux/Windows). See docker_client.py.
+    # Empty = auto-detect socket (macOS/Linux/Windows). See docker/client.py.
     docker_host: str = ""
     # Minimal git image for DockerCommandRunner; ENTRYPOINT is "git".
     git_image: str = "alpine/git:latest"
@@ -47,6 +47,7 @@ class CodeReviewSettings(BaseSettings):
     llm_api_token: str = ""
     llm_model: str = "gpt-4o"
     opencode_agent: str = "code-reviewer"
+    opencode_log_level: str = "INFO"
     opencode_model: str = ""
     opencode_server_url: str = "http://localhost:4096"
     opencode_server_password: str = ""
@@ -57,6 +58,14 @@ class CodeReviewSettings(BaseSettings):
     # Empty = publish OpenCode port to host (native worker dev).
     agent_network: str = ""
     opencode_config_path: str = ""
+    # Host path for opencode.generated.json when worker spawns agent containers
+    # via Docker socket (required in Compose; path must exist on the Docker host).
+    opencode_config_host_path: str = ""
+    # K8s runtime (stub — not implemented yet)
+    k8s_namespace: str = "coreview"
+    k8s_kubeconfig_path: str = ""
+    k8s_agent_config_configmap: str = "opencode-config"
+    k8s_image_pull_secret: str = ""
 
     @property
     def resolved_opencode_model(self) -> str:

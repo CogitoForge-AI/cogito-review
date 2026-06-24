@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
+from app.providers.runtime.specs import ReviewJobRequest
+
 
 @dataclass(frozen=True, slots=True)
 class PRMetadata:
@@ -131,6 +133,8 @@ class RuntimeProvider(Protocol):
     async def cleanup_workspace(self, workspace: Workspace) -> None: ...
 
     def command_runner(self) -> CommandRunner: ...
+
+    async def run_review_job(self, request: ReviewJobRequest) -> None: ...
 
 
 @dataclass(slots=True)

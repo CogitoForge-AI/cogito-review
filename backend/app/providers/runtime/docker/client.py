@@ -25,11 +25,8 @@ def _socket_candidates() -> list[str]:
 
     home = Path.home()
     return [
-        # Linux native daemon, Docker Compose (bind-mount), macOS with Desktop symlink
         "unix:///var/run/docker.sock",
-        # macOS Docker Desktop (actual socket before symlink)
         f"unix://{home}/.docker/run/docker.sock",
-        # Docker Desktop for Linux (per-user socket, not /var/run/docker.sock)
         f"unix://{home}/.docker/desktop/docker.sock",
     ]
 
@@ -99,10 +96,21 @@ def get_docker_client(host: str | None = None) -> DockerClient:
         "  Windows Docker:       npipe:////./pipe/docker_engine",
         "  Docker Desktop Linux: unix://$HOME/.docker/desktop/docker.sock",
         "Or export DOCKER_HOST from your active context:",
-        "  export DOCKER_HOST=$(docker context inspect --format '{{.Endpoints.docker.Host}}')",
+        (
+            "  export DOCKER_HOST=$(docker context inspect "
+            "--format '{{.Endpoints.docker.Host}}')"
+        ),
     ]
-    detail = "\n".join(f"  - {e}" for e in errors) if errors else "  (no endpoints reachable)"
-    msg = "Cannot connect to Docker Engine.\nTried:\n" + detail + "\n\n" + "\n".join(hints)
+    if errors:
+        detail = "\n".join(f"  - {e}" for e in errors)
+    else:
+        detail = "  (no endpoints reachable)"
+    msg = (
+        "Cannot connect to Docker Engine.\nTried:\n"
+        + detail
+        + "\n\n"
+        + "\n".join(hints)
+    )
     raise RuntimeError(msg)
 
 

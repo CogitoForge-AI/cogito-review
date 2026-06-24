@@ -15,7 +15,7 @@ from app.providers.protocols import (
     Workspace,
     WorkspaceSpec,
 )
-from app.providers.runtime.command_runner import DockerCommandRunner
+from app.providers.runtime.docker.command_runner import DockerCommandRunner
 
 
 def test_github_webhook_signature_valid() -> None:
@@ -231,7 +231,13 @@ def test_build_opencode_config_includes_mcp() -> None:
     cfg = CodeReviewSettings()
     config = build_opencode_config(cfg)
     assert "mcp" in config
-    assert config["mcp"]["coreview"]["type"] == "remote"
+    assert config["mcp"]["coreview"]["type"] == "local"
+    assert config["mcp"]["coreview"]["command"] == [
+        "coreview-agent",
+        "serve",
+        "--transport",
+        "stdio",
+    ]
     assert config["tools"]["bash"] is False
     agent = config["agent"]["code-reviewer"]
     assert agent["tools"]["coreview-git_*"] is True
@@ -278,7 +284,7 @@ def test_provider_factory_github_docker() -> None:
     )
     assert providers.git is not None
     assert providers.runtime is not None
-    with patch("app.providers.runtime.docker.get_docker_client") as get_client:
+    with patch("app.providers.runtime.docker.provider.get_docker_client") as get_client:
         get_client.return_value = MagicMock()
         assert providers.runtime.command_runner() is not None
 
@@ -311,7 +317,7 @@ def test_docker_command_runner_invokes_client() -> None:
 
 
 def test_docker_client_uses_explicit_host() -> None:
-    from app.providers.runtime import docker_client
+    from app.providers.runtime.docker import client as docker_client
 
     docker_client.reset_docker_client()
     mock_client = MagicMock()

@@ -20,7 +20,7 @@ Production ships as a single Docker image (API + bundled SPA). Architecture diag
 cd backend && uv run code-review backend run   # FastAPI server
 cd backend && uv run code-review job worker    # Celery worker
 cd agent && uv run coreview-agent review run --review-id <uuid>
-cd agent && uv run coreview-agent serve --transport sse  # MCP Git/CI tools
+cd agent && uv run coreview-agent review run --review-id <uuid>  # one-shot review (MCP via stdio)
 ```
 
 ### Provider abstractions

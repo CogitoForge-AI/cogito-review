@@ -97,41 +97,6 @@ ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS repo_integration_id UUID
   REFERENCES repo_integrations(id) ON DELETE SET NULL;
 
-INSERT INTO llm_providers (name, provider_id, base_url, api_token, model, opencode_model, is_default)
-SELECT
-  'Default',
-  s.llm_provider_id,
-  s.llm_base_url,
-  s.llm_api_token,
-  s.llm_model,
-  s.opencode_model,
-  true
-FROM integration_settings s
-WHERE s.id = 1
-  AND NOT EXISTS (SELECT 1 FROM llm_providers);
-
-INSERT INTO repo_integrations (
-  name,
-  git_provider,
-  repo_full_name,
-  github_webhook_secret,
-  github_token,
-  llm_provider_id
-)
-SELECT
-  CASE
-    WHEN trim(s.github_repo_full_name) = '' THEN 'All repositories'
-    ELSE s.github_repo_full_name
-  END,
-  s.git_provider,
-  s.github_repo_full_name,
-  s.github_webhook_secret,
-  s.github_token,
-  (SELECT id FROM llm_providers WHERE is_default LIMIT 1)
-FROM integration_settings s
-WHERE s.id = 1
-  AND NOT EXISTS (SELECT 1 FROM repo_integrations);
-
 -- migrate:down
 ALTER TABLE reviews DROP COLUMN IF EXISTS repo_integration_id;
 DROP TABLE IF EXISTS repo_integrations;

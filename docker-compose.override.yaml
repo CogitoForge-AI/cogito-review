@@ -20,6 +20,7 @@ services:
       CORS_ORIGINS: '["http://localhost:5173"]'
       NEXO_COREVIEW_CELERY_BROKER_URL: redis://redis:6379/0
       NEXO_COREVIEW_OPENCODE_CONFIG_PATH: /config/opencode.generated.json
+      NEXO_COREVIEW_OPENCODE_CONFIG_HOST_PATH: ${NEXO_COREVIEW_PROJECT_DIR}/opencode.generated.json
     volumes:
       - ./backend:/app
       - backend_venv:/app/.venv
@@ -61,6 +62,8 @@ services:
       - frontend_node_modules:/app/node_modules
     depends_on:
       - api
+    networks:
+      - coreview
     develop:
       watch:
         - action: rebuild
@@ -85,6 +88,7 @@ services:
           target: /app/tsconfig.app.json
 
   worker:
+    profiles: !reset []
     build:
       context: .
       dockerfile: dev.Dockerfile
@@ -98,6 +102,8 @@ services:
       NEXO_COREVIEW_AGENT_IMAGE: ${NEXO_COREVIEW_AGENT_IMAGE:-nexo-coreview-agent:dev}
       NEXO_COREVIEW_AGENT_NETWORK: coreview
       NEXO_COREVIEW_OPENCODE_CONFIG_PATH: /config/opencode.generated.json
+      NEXO_COREVIEW_OPENCODE_CONFIG_HOST_PATH: ${NEXO_COREVIEW_PROJECT_DIR}/opencode.generated.json
+      NEXO_COREVIEW_OPENCODE_LOG_LEVEL: ${NEXO_COREVIEW_OPENCODE_LOG_LEVEL:-INFO}
       NEXO_COREVIEW_OPENCODE_SERVER_PASSWORD: ${NEXO_COREVIEW_OPENCODE_SERVER_PASSWORD:-}
     volumes:
       - ./backend:/app

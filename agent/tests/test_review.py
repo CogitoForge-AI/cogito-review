@@ -5,9 +5,6 @@ from app.services.review_format import split_findings
 
 def test_opencode_parse_findings_from_json() -> None:
     provider = OpenCodeLLMProvider(
-        server_url="http://localhost:4096",
-        username="opencode",
-        password="",
         agent="code-reviewer",
         model="anthropic/claude-sonnet-4-5",
         timeout_seconds=60,
@@ -29,11 +26,27 @@ def test_opencode_parse_findings_from_json() -> None:
     assert findings[0].file_path == "app/main.py"
 
 
+def test_opencode_build_command_includes_log_flags() -> None:
+    provider = OpenCodeLLMProvider(
+        agent="code-reviewer",
+        model="openai-compat/gpt-4o",
+        timeout_seconds=60,
+        log_level="DEBUG",
+    )
+    cmd = provider._build_command("/workspaces/r1/repo")
+    assert cmd[:5] == [
+        "opencode",
+        "--log-level",
+        "DEBUG",
+        "--print-logs",
+        "run",
+    ]
+    assert "--format" in cmd
+    assert cmd[cmd.index("--format") + 1] == "json"
+
+
 def test_opencode_slim_prompt_mentions_mcp() -> None:
     provider = OpenCodeLLMProvider(
-        server_url="http://localhost:4096",
-        username="opencode",
-        password="",
         agent="code-reviewer",
         model="test/model",
         timeout_seconds=60,
@@ -54,7 +67,46 @@ def test_opencode_slim_prompt_mentions_mcp() -> None:
     )
     prompt = provider._build_prompt(context)
     assert "coreview-git_fetch_pr_context" in prompt
+    assert "Do not post GitHub comments via MCP" in prompt
     assert "diff content" not in prompt
+
+
+def test_opencode_parse_ndjson_stream_ignores_tool_events() -> None:
+    provider = OpenCodeLLMProvider(
+        agent="code-reviewer",
+        model="test/model",
+        timeout_seconds=60,
+    )
+    stdout = "\n".join(
+        [
+            '{"type":"step_start","part":{"type":"step-start"}}',
+            (
+                '{"type":"tool_use","part":{"type":"tool",'
+                '"tool":"coreview_coreview-ci_get_summary","output":"{}"}}'
+            ),
+            (
+                '{"type":"text","part":{"type":"text","text":'
+                '"```json\\n{\\"findings\\": [{\\"severity\\": \\"warning\\", '
+                '\\"title\\": \\"Bug\\", \\"body\\": \\"details\\"}]}\\n```"}}'
+            ),
+        ]
+    )
+    findings = provider._parse_cli_output(stdout)
+    assert len(findings) == 1
+    assert findings[0].title == "Bug"
+
+
+def test_opencode_parse_ndjson_stream_without_findings_returns_empty() -> None:
+    provider = OpenCodeLLMProvider(
+        agent="code-reviewer",
+        model="test/model",
+        timeout_seconds=60,
+    )
+    stdout = (
+        '{"type":"tool_use","part":{"type":"tool","output":"ignored"}}\n'
+        '{"type":"step_finish","part":{"type":"step-finish"}}'
+    )
+    assert provider._parse_cli_output(stdout) == []
 
 
 def test_split_findings() -> None:

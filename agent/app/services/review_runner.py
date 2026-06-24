@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 from pathlib import Path
 from uuid import UUID
@@ -56,6 +57,7 @@ async def execute_review_logic(review_id: str) -> None:
         )
 
         await repo.update_status(review.id, status="running", set_started=True)
+        logger.info("Review %s: fetching PR context", review_id)
 
         pr_context = await providers.git.fetch_pr_context(
             review.repo_full_name,
@@ -81,21 +83,25 @@ async def execute_review_logic(review_id: str) -> None:
             head_sha=review.head_sha,
         )
         workspace = Workspace(path=workspace_root, spec=spec)
+        logger.info("Review %s: cloning repository", review_id)
         await providers.git.clone_repository(
             spec, workspace, LocalCommandRunner()
         )
 
         llm = OpenCodeLLMProvider(
-            server_url=infra.opencode_server_url,
-            username=infra.opencode_server_username,
-            password=infra.opencode_server_password,
             agent=infra.opencode_agent,
             model=llm_provider.resolved_opencode_model,
             timeout_seconds=infra.review_timeout_seconds,
+            opencode_config_path=os.environ.get(
+                "OPENCODE_CONFIG", "/config/opencode.json"
+            ),
+            log_level=infra.opencode_log_level,
         )
         repo_workspace = Workspace(path=workspace_root / "repo", spec=spec)
+        logger.info("Review %s: running LLM review", review_id)
         findings = await llm.run_review(repo_workspace, pr_context)
 
+        logger.info("Review %s: posting %d finding(s)", review_id, len(findings))
         await repo.replace_findings(
             review.id,
             [

@@ -59,7 +59,7 @@ ARG IMAGE_AUTHORS
 ARG IMAGE_TITLE
 
 LABEL org.opencontainers.image.title="${IMAGE_TITLE}" \
-      org.opencontainers.image.description="Nexo Co-Review agent — OpenCode server with bundled MCP and git" \
+      org.opencontainers.image.description="Nexo Co-Review agent — OpenCode CLI review runner with bundled MCP and git" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.revision="${VCS_REF}" \
@@ -82,11 +82,6 @@ ENV PYTHONUNBUFFERED=1 \
     APP_VERSION=${VERSION} \
     PATH="/app/.venv/bin:$PATH" \
     OPENCODE_CONFIG=/config/opencode.json \
-    NEXO_COREVIEW_MCP_BIND_HOST=127.0.0.1 \
-    NEXO_COREVIEW_MCP_SERVER_PORT=8001 \
-    NEXO_COREVIEW_MCP_SERVER_URL=http://127.0.0.1:8001/sse \
-    NEXO_COREVIEW_OPENCODE_BIND_HOST=0.0.0.0 \
-    NEXO_COREVIEW_OPENCODE_PORT=4096 \
     NEXO_COREVIEW_WORKSPACE_ROOT=/workspaces
 
 COPY --from=python-builder /app/.venv /app/.venv
@@ -99,8 +94,6 @@ COPY agent/skills/ /opencode/skills/
 
 RUN chmod +x /usr/local/bin/agent-entrypoint.sh \
  && mkdir -p /workspaces
-
-EXPOSE 4096 8001
 
 VOLUME ["/workspaces", "/config"]
 

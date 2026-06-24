@@ -19,10 +19,8 @@ async def resolve_llm_provider(
 ) -> LlmProviderRow | None:
     llm_repo = LlmProviderRepository(conn)
     if repo_integration.llm_provider_id:
-        provider = await llm_repo.get(repo_integration.llm_provider_id)
-        if provider:
-            return provider
-    return await llm_repo.get_default()
+        return await llm_repo.get(repo_integration.llm_provider_id)
+    return None
 
 
 async def build_providers_for_repo(

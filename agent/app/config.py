@@ -34,6 +34,7 @@ class AgentSettings(BaseSettings):
     opencode_bind_host: str = "0.0.0.0"
     opencode_port: int = 4096
     opencode_agent: str = "code-reviewer"
+    opencode_log_level: str = "INFO"
     review_timeout_seconds: int = 600
     workspace_root: str = "/workspaces"
 

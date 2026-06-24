@@ -14,12 +14,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   useDeleteLlmProvider,
   useLlmProvider,
   useUpdateLlmProvider,
 } from "@/hooks/use-settings"
+import { llmProviderIdOptions } from "@/lib/settings-constants"
 
 export const Route = createFileRoute("/llm-providers/$providerId")({
   component: LlmProviderDetailPage,
@@ -106,12 +108,18 @@ function LlmProviderDetailPage() {
                   />
                 </Field>
                 <Field label="Provider ID">
-                  <Input
+                  <Select
                     value={editing.provider_id}
                     onChange={(e) =>
                       setDraft({ ...editing, provider_id: e.target.value })
                     }
-                  />
+                  >
+                    {llmProviderIdOptions(editing.provider_id).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </Field>
                 <Field label="Base URL">
                   <Input

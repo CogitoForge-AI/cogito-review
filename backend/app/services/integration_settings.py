@@ -2,15 +2,14 @@ import json
 import logging
 import os
 from pathlib import Path
-from uuid import UUID
 
 from app.config import CodeReviewSettings, get_code_review_settings
-from app.repositories.llm_providers import LlmProviderRepository, LlmProviderRow
-from app.repositories.repo_integrations import RepoIntegrationRepository
 from app.repositories.integration_settings import (
     IntegrationSettingsRepository,
     IntegrationSettingsRow,
 )
+from app.repositories.llm_providers import LlmProviderRepository
+from app.repositories.repo_integrations import RepoIntegrationRepository
 from app.schemas.integration_settings import (
     IntegrationSettingsResponse,
     IntegrationSettingsUpdate,
@@ -58,7 +57,6 @@ async def _legacy_row_from_multi(conn) -> IntegrationSettingsRow | None:
     if default_llm is None or repo is None:
         return None
 
-    from datetime import UTC, datetime
 
     now = max(
         default_llm.updated_at,
@@ -79,12 +77,10 @@ async def _legacy_row_from_multi(conn) -> IntegrationSettingsRow | None:
 
 
 async def get_integration_settings(conn) -> IntegrationSettingsRow:
-    legacy = await IntegrationSettingsRepository(conn).get()
     multi = await _legacy_row_from_multi(conn)
     if multi is not None:
         return multi
-    row = await _seed_from_env_if_empty(conn, legacy)
-    return row
+    return await IntegrationSettingsRepository(conn).get()
 
 
 async def update_integration_settings(
@@ -159,59 +155,6 @@ async def update_integration_settings(
         raise RuntimeError(msg)
     logger.info("Integration settings updated (legacy API) at %s", row.updated_at)
     return row
-
-
-async def _seed_from_env_if_empty(
-    conn,
-    row: IntegrationSettingsRow,
-) -> IntegrationSettingsRow:
-    env = get_code_review_settings()
-    if _row_has_user_config(row):
-        return row
-
-    if not any(
-        [
-            env.github_webhook_secret,
-            env.github_token,
-            env.llm_api_token,
-            env.llm_base_url != "https://api.openai.com/v1",
-        ]
-    ):
-        return row
-
-    llm_repo = LlmProviderRepository(conn)
-    repo_repo = RepoIntegrationRepository(conn)
-    logger.info("Seeding settings from environment (one-time bootstrap)")
-
-    default_llm = await llm_repo.create(
-        name="Default",
-        provider_id=env.llm_provider_id,
-        base_url=env.llm_base_url,
-        api_token=env.llm_api_token or "",
-        model=env.llm_model,
-        opencode_model=env.opencode_model or "",
-        is_default=True,
-    )
-    await repo_repo.create(
-        name="All repositories",
-        git_provider="github",
-        repo_full_name="",
-        github_webhook_secret=env.github_webhook_secret or "",
-        github_token=env.github_token or "",
-        llm_provider_id=default_llm.id,
-    )
-    await sync_opencode_config_from_db(conn)
-    multi = await _legacy_row_from_multi(conn)
-    return multi if multi is not None else row
-
-
-def _row_has_user_config(row: IntegrationSettingsRow) -> bool:
-    return bool(
-        row.github_webhook_secret
-        or row.github_token
-        or row.llm_api_token
-        or row.github_repo_full_name
-    )
 
 
 def sync_opencode_config(

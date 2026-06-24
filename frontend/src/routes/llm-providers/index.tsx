@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -28,7 +29,7 @@ import {
   useDeleteLlmProvider,
   useLlmProviders,
 } from "@/hooks/use-settings"
-import { emptyLlmForm } from "@/lib/settings-constants"
+import { emptyLlmForm, llmProviderIdOptions } from "@/lib/settings-constants"
 
 export const Route = createFileRoute("/llm-providers/")({
   component: LlmProvidersPage,
@@ -61,8 +62,8 @@ function LlmProvidersPage() {
   return (
     <AppShell title="LLM Provider">
       <p className="text-muted-foreground mb-6 text-sm">
-        Configure LLM providers registered in OpenCode. Reviews use the LLM
-        linked from the repository entry, or the default provider.
+        Configure LLM providers registered in OpenCode. Each repository must
+        link to an LLM provider before reviews can run.
       </p>
 
       <div className="mb-4 flex items-center justify-between gap-4">
@@ -99,13 +100,19 @@ function LlmProvidersPage() {
                   />
                 </Field>
                 <Field label="Provider ID">
-                  <Input
+                  <Select
                     required
                     value={newLlm.provider_id}
                     onChange={(e) =>
                       setNewLlm({ ...newLlm, provider_id: e.target.value })
                     }
-                  />
+                  >
+                    {llmProviderIdOptions(newLlm.provider_id).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </Field>
                 <Field label="Base URL">
                   <Input
