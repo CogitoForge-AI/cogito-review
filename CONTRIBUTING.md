@@ -15,19 +15,18 @@ Production ships as a single Docker image (API + bundled SPA).
 
 ## Prerequisites
 
-- Python 3.11+ and [uv](https://docs.astral.sh/uv/) (native dev)
-- Node.js 22+ and Yarn (native dev)
-- Docker Compose v2.22+ (recommended; `watch` support for file sync)
+- Docker Compose v2.22+ (`watch` support for file sync)
+- [uv](https://docs.astral.sh/uv/) and Node.js 22+ for host-side lint, test, and OpenAPI generation
 
 ## Getting started
 
 ### Docker dev (recommended)
 
-Full stack with Vite HMR, Uvicorn `--reload`, and Docker Compose Watch:
+Full stack with Vite HMR, Uvicorn `--reload`, and Docker Compose Watch. Migrations, OpenCode config, and agent image build run automatically on startup.
 
 ```bash
 cp .env.example .env
-make dev-migrate    # first time only
+# Set NEXO_COREVIEW_PROJECT_DIR in .env to this repo's absolute path
 make dev-watch
 ```
 
@@ -47,37 +46,21 @@ make dev
 
 On Docker Desktop (macOS/Windows), set `CHOKIDAR_USEPOLLING=true` in `.env` if HMR misses file changes.
 
-### Native local development
-
-```bash
-cp .env.example .env
-make dev-db         # Postgres + Redis
-make migrate
-make dev-api        # terminal 1
-make dev-web        # terminal 2
-```
-
-Install dependencies directly:
-
-```bash
-cd backend && uv sync
-cd frontend && yarn install
-```
-
 ### Production
 
 ```bash
-make prod-up   # docker compose -f docker-compose.yaml --profile prod up -d
+cp .env.example .env
+make prod-up   # docker compose -f docker-compose.yaml --profile prod up --build -d --wait
 ```
 
-Production uses only the base compose file; `docker-compose.override.yaml` is not merged.
+Production uses only the base compose file; `docker-compose.override.yaml` is not merged. Init jobs (migrate, opencode config, agent image) run automatically before `app` and `worker` start.
 
 ## Compose layout
 
 | File | Purpose |
 |------|---------|
-| [`docker-compose.yaml`](docker-compose.yaml) | Base: `db`, `app` (profile `prod`), `migrate` (profile `tools`) |
-| [`docker-compose.override.yaml`](docker-compose.override.yaml) | Dev: `api`, `web`, worker, MCP, OpenCode, Compose Watch |
+| [`docker-compose.yaml`](docker-compose.yaml) | Base: `db`, `redis`, init jobs (`migrate`, `render-opencode`, `agent-image`), `app`/`worker` (profile `prod`) |
+| [`docker-compose.override.yaml`](docker-compose.override.yaml) | Dev: `api`, `web`, `worker`, Compose Watch |
 | [`dev.Dockerfile`](dev.Dockerfile) | Multi-stage dev images (`target: api` / `target: web`) |
 | [`Dockerfile`](Dockerfile) | Production bundle (API + static SPA) |
 
@@ -229,18 +212,15 @@ cd backend && uv run pytest tests/api/test_reviews.py -k webhook
 |---------|-------------|
 | `make dev-watch` | Docker dev with Compose Watch |
 | `make dev` | Docker dev without watch |
-| `make dev-down` | Stop Docker dev stack |
-| `make dev-migrate` | Run migrations in compose network |
-| `make dev-db` | Start Postgres + Redis only |
-| `make dev-api` | Uvicorn with reload (native) |
-| `make dev-web` | Vite dev server (native) |
-| `make dev-worker` | Celery worker (native) |
-| `make dev-mcp-serve` | Nexo Co-Review MCP server (`nexo-coreview`) |
-| `make render-opencode-config` | Generate `opencode.generated.json` |
-| `make migrate` / `make migrate-down` | dbmate up / down |
-| `make prod-up` | Production compose |
+| `make dev-down` / `make down` | Stop Docker stack |
+| `make prod-up` / `make up` | Production stack (auto migrate + opencode config + agent build) |
+| `make migrate` / `make migrate-down` | dbmate up / down via Compose |
+| `make render-opencode-config` | Regenerate `opencode.generated.json` via Compose |
+| `make build-agent` | Build agent image via Compose |
 
 ## Pull requests
+
+CI runs on every pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): lint, unit tests, integration tests (Postgres), and a Docker build smoke check. Merging to `main` triggers a publish workflow that pushes `ghcr.io/nexo-agent/nexo-coreview` and `ghcr.io/nexo-agent/nexo-coreview-agent` after CI passes. See [RELEASING.md](RELEASING.md) for the full Git flow and release process.
 
 Before opening a PR:
 
@@ -260,6 +240,7 @@ Commit messages: concise, imperative, explain *why*.
 
 ## Further reading
 
+- [RELEASING.md](RELEASING.md) — Git flow, PR process, semver releases, GHCR publish
 - [AGENTS.md](AGENTS.md) — context for AI coding agents
 - [`docs/architecture.svg`](docs/architecture.svg) — system architecture
 - [`docs/flow.svg`](docs/flow.svg) — review flow

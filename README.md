@@ -1,5 +1,10 @@
 # Nexo Co-Review
 
+[![CI](https://github.com/Nexo-Agent/code-review/actions/workflows/ci.yml/badge.svg)](https://github.com/Nexo-Agent/code-review/actions/workflows/ci.yml)
+[![Publish](https://github.com/Nexo-Agent/code-review/actions/workflows/publish.yml/badge.svg)](https://github.com/Nexo-Agent/code-review/actions/workflows/publish.yml)
+[![Backend](https://img.shields.io/badge/ghcr.io-nexo--coreview-2496ED?logo=docker&logoColor=white)](https://github.com/Nexo-Agent/code-review/pkgs/container/nexo-coreview)
+[![Agent](https://img.shields.io/badge/ghcr.io-nexo--coreview--agent-2496ED?logo=docker&logoColor=white)](https://github.com/Nexo-Agent/code-review/pkgs/container/nexo-coreview-agent)
+
 Codename: `nexo-coreview`
 
 AI-powered pull request reviews for GitHub. Connect a repository, point a webhook at this service, and get structured findings on every PR — powered by [OpenCode](https://opencode.ai/) and the LLM provider you choose.
@@ -21,11 +26,27 @@ AI-powered pull request reviews for GitHub. Connect a repository, point a webhoo
 
 ```bash
 cp .env.example .env
-make dev-migrate
 make prod-up
 ```
 
 Open the app (default port from `APP_PORT`, usually `8000`). Go to **Settings** to add an LLM provider and register your GitHub repository.
+
+### Container images (GHCR)
+
+Published on every push to `main` and on version tags (`v*`):
+
+```bash
+docker pull ghcr.io/nexo-agent/nexo-coreview:latest
+docker pull ghcr.io/nexo-agent/nexo-coreview-agent:latest
+```
+
+Set in `.env` for production:
+
+```bash
+NEXO_COREVIEW_AGENT_IMAGE=ghcr.io/nexo-agent/nexo-coreview-agent:latest
+```
+
+Use a pinned digest or semver tag in production instead of `latest`.
 
 For local development with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -67,5 +88,6 @@ GitHub PR event → API webhook → Celery worker → spawn agent container → 
 | Document | Description |
 |----------|-------------|
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup, environment variables, testing |
+| [RELEASING.md](RELEASING.md) | Git flow, releases, GHCR publish |
 | [AGENTS.md](AGENTS.md) | Instructions for AI coding agents |
 | [`.env.example`](.env.example) | Infrastructure environment template |

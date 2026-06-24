@@ -38,7 +38,7 @@ function DashboardPage() {
             ) : health.isError ? (
               <p className="text-destructive text-sm">
                 Failed to reach API. Start backend with{" "}
-                <code className="text-xs">make dev-api</code>.
+                <code className="text-xs">make dev</code>.
               </p>
             ) : (
               <dl className="grid gap-2 text-sm">

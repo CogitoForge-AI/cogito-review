@@ -38,41 +38,34 @@ Agent skills bundled into the Docker image live in `agent/skills/` (OpenCode). I
 
 ## Prerequisites
 
-- Python 3.11+ and [uv](https://docs.astral.sh/uv/) (native dev)
-- Node.js 22+ and Yarn (native dev)
-- Docker Compose v2.22+ (recommended dev path)
+- Docker Compose v2.22+ (`watch` support for file sync)
+- [uv](https://docs.astral.sh/uv/) and Node.js 22+ only for host-side lint/test/openapi tasks
 
 ## Setup commands
 
 ```bash
 cp .env.example .env
+# Set NEXO_COREVIEW_PROJECT_DIR in .env to this repo's absolute path
 
 # Docker dev (recommended): HMR + Uvicorn reload + Compose Watch
-make dev-migrate   # first time only
 make dev-watch
 
-# Native local dev
-make dev-db        # Postgres + Redis
-make migrate
-make dev-api       # terminal 1
-make dev-web       # terminal 2
+# Or without watch:
+make dev
+
+# Production (base compose only, profile prod):
+make prod-up
 ```
 
 | URL | Service |
 |-----|---------|
-| http://localhost:5173 | Frontend (Vite HMR) |
+| http://localhost:5173 | Frontend (Vite HMR, dev only) |
 | http://localhost:8000/docs | OpenAPI / Swagger |
 | http://localhost:8000/api/v1/health | Health check |
 
+On `make dev` / `make prod-up`, Compose automatically runs **dbmate migrate**, **render opencode config**, and **build agent image** before starting app services.
+
 On Docker Desktop (macOS/Windows), set `CHOKIDAR_USEPOLLING=true` in `.env` if HMR misses file changes.
-
-Install dependencies directly (when not using Docker):
-
-```bash
-cd backend && uv sync
-cd agent && uv sync
-cd frontend && yarn install
-```
 
 ## Dev environment tips
 
@@ -170,7 +163,7 @@ cd backend && uv run pytest -m integration     # integration only
 cd backend && uv run pytest tests/api/test_reviews.py -k "webhook"
 ```
 
-Integration tests need a running database (`make dev-db` or `make migrate` with `DATABASE_URL`).
+Integration tests need Postgres (`docker compose up -d db redis && make migrate`, or run the full dev stack with `make dev`).
 
 Add or update tests for behavior you change. API tests use `httpx.AsyncClient` with mocked dependencies where appropriate.
 
@@ -199,12 +192,11 @@ Title format: short summary of the change (no strict prefix required).
 
 | Command | Description |
 |---------|-------------|
+| `make dev` | Docker dev stack (`docker compose up --build`) |
 | `make dev-watch` | Docker dev with Compose Watch |
-| `make dev-down` | Stop Docker dev stack |
-| `make dev-migrate` | Migrations inside compose network |
-| `make dev-worker` | Celery worker (native) |
-| `make build-agent` | Build per-review agent image (`nexo-coreview-agent`) |
-| `make render-opencode-config` | Generate `opencode.generated.json` |
-| `make migrate` / `make migrate-down` | dbmate up / down |
-| `make openapi` | Export OpenAPI + regenerate TS types |
-| `make prod-up` | Production compose (profile `prod`) |
+| `make dev-down` / `make down` | Stop stack |
+| `make prod-up` / `make up` | Production stack (profile `prod`) |
+| `make migrate` / `make migrate-down` | dbmate up / down via Compose |
+| `make render-opencode-config` | Regenerate `opencode.generated.json` via Compose |
+| `make build-agent` | Build agent image via Compose |
+| `make openapi` | Export OpenAPI + regenerate TS types (host) |

@@ -1,7 +1,6 @@
 # Development override — merged automatically with docker-compose.yaml
-# https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/
 #
-#   docker compose up --build   # db + api + web
+#   docker compose up --build   # db + init + api + web + worker
 #   docker compose watch        # + Compose Watch (HMR / uvicorn reload)
 #
 # Not loaded when deploying production:
@@ -33,6 +32,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      migrate:
+        condition: service_completed_successfully
+      render-opencode:
+        condition: service_completed_successfully
+      agent-image:
+        condition: service_completed_successfully
     develop:
       watch:
         - action: rebuild
@@ -61,7 +66,8 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
     depends_on:
-      - api
+      api:
+        condition: service_started
     networks:
       - coreview
     develop:
@@ -113,10 +119,36 @@ services:
       - ./opencode.generated.json:/config/opencode.generated.json:ro
     networks:
       - coreview
-    depends_on:
-      - api
-      - redis
-      - db
+    depends_on: !reset
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+      render-opencode:
+        condition: service_completed_successfully
+      agent-image:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+
+  render-opencode:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: api
+    user: "0:0"
+    command:
+      [
+        "uv",
+        "run",
+        "code-review",
+        "config",
+        "render-opencode",
+        "-o",
+        "/config/opencode.generated.json",
+      ]
 
 volumes:
   backend_venv:

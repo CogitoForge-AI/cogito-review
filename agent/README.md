@@ -21,6 +21,8 @@ uv run coreview-agent review run --review-id <uuid>
 
 Docker image (OpenCode + MCP + git):
 
+Built automatically on `make dev` / `make prod-up`, or manually:
+
 ```bash
-make build-agent   # from repo root
+make build-agent   # docker compose build agent-image
 ```

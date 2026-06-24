@@ -186,7 +186,7 @@ function LlmProvidersPage() {
           ) : providers.isError ? (
             <p className="text-destructive text-sm">
               Could not load LLM providers. Run{" "}
-              <code className="text-xs">make dev-migrate</code> first.
+              <code className="text-xs">make dev</code> first.
             </p>
           ) : (
             <Table>
