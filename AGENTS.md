@@ -64,6 +64,7 @@ cp .env.example .env
 
 # Docker dev (recommended): HMR + Uvicorn reload + Compose Watch
 make dev-watch
+make pre-commit-install   # optional: lint/format on git commit
 
 # Or without watch:
 make dev
@@ -217,3 +218,5 @@ Title format: short summary of the change (no strict prefix required).
 | `make render-opencode-config` | Regenerate `opencode.generated.json` on host (optional debug) |
 | `make build-agent` | Build agent image locally (`docker build`) |
 | `make openapi` | Export OpenAPI + regenerate TS types (host) |
+| `make pre-commit-install` | Install git pre-commit hooks (host) |
+| `make pre-commit` | Run pre-commit on all files (host) |

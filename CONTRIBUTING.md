@@ -27,6 +27,7 @@ Full stack with Vite HMR, Uvicorn `--reload`, and Docker Compose Watch. Migratio
 ```bash
 cp .env.example .env
 make dev-watch
+make pre-commit-install   # optional: lint/format on git commit
 ```
 
 Without watch:
@@ -206,6 +207,16 @@ make test          # unit + integration (requires Postgres)
 make openapi       # export OpenAPI + regenerate TS types
 ```
 
+### Pre-commit hooks
+
+Install once after cloning (requires `uv` and Node.js 22+):
+
+```bash
+make pre-commit-install
+```
+
+On every `git commit`, hooks run Ruff (shared/backend/agent), ESLint + TypeScript check (frontend), and basic file hygiene checks. Run the full suite manually with `make pre-commit`.
+
 Focused backend tests:
 
 ```bash
@@ -225,6 +236,8 @@ cd backend && uv run pytest tests/api/test_reviews.py -k webhook
 | `make migrate` / `make migrate-down` | dbmate up / down via Compose |
 | `make render-opencode-config` | Regenerate `opencode.generated.json` on host (optional debug) |
 | `make build-agent` | Build agent image locally (`docker build`) |
+| `make pre-commit-install` | Install git pre-commit hooks |
+| `make pre-commit` | Run pre-commit on all files |
 
 ## Pull requests
 

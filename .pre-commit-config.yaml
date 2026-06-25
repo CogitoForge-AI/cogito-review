@@ -1,0 +1,73 @@
+# Install: make pre-commit-install
+# Run manually: make pre-commit
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^\.agents/
+      - id: end-of-file-fixer
+        exclude: ^(\.agents/|.*\.svg$)
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^docker-compose(\.override)?\.yaml$
+      - id: check-json
+        exclude: ^frontend/tsconfig.*\.json$
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: ruff-check-shared
+        name: ruff check (shared)
+        entry: scripts/pre-commit/ruff-workspace.sh shared check
+        language: script
+        files: ^shared/.*\.py$
+
+      - id: ruff-format-shared
+        name: ruff format (shared)
+        entry: scripts/pre-commit/ruff-workspace.sh shared format
+        language: script
+        files: ^shared/.*\.py$
+
+      - id: ruff-check-backend
+        name: ruff check (backend)
+        entry: scripts/pre-commit/ruff-workspace.sh backend check
+        language: script
+        files: ^backend/.*\.py$
+
+      - id: ruff-format-backend
+        name: ruff format (backend)
+        entry: scripts/pre-commit/ruff-workspace.sh backend format
+        language: script
+        files: ^backend/.*\.py$
+
+      - id: ruff-check-agent
+        name: ruff check (agent)
+        entry: scripts/pre-commit/ruff-workspace.sh agent check
+        language: script
+        files: ^agent/.*\.py$
+
+      - id: ruff-format-agent
+        name: ruff format (agent)
+        entry: scripts/pre-commit/ruff-workspace.sh agent format
+        language: script
+        files: ^agent/.*\.py$
+
+      - id: eslint-frontend
+        name: eslint (frontend)
+        entry: scripts/pre-commit/eslint-frontend.sh
+        language: script
+        files: ^frontend/.*\.(ts|tsx|js|jsx|mjs|cjs)$
+        exclude: ^frontend/src/api/generated/
+
+      - id: typecheck-frontend
+        name: typecheck (frontend)
+        entry: bash -c "cd frontend && yarn typecheck"
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false

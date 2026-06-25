@@ -1,4 +1,4 @@
-.PHONY: dev dev-watch dev-down up down prod-up migrate migrate-down openapi lint test test-unit build-agent render-opencode-config
+.PHONY: dev dev-watch dev-down up down prod-up migrate migrate-down openapi lint test test-unit build-agent render-opencode-config pre-commit-install pre-commit
 
 ifneq (,$(wildcard .env))
 include .env
@@ -67,3 +67,14 @@ test-unit:
 	cd shared && uv run pytest
 	cd backend && uv run pytest -m "not integration"
 	cd agent && uv run pytest
+
+pre-commit-install:
+	uv sync --locked --group dev
+	cd shared && uv sync --locked --all-groups
+	cd backend && uv sync --locked --all-groups
+	cd agent && uv sync --locked --all-groups
+	cd frontend && corepack enable yarn && yarn install --frozen-lockfile
+	uv run pre-commit install
+
+pre-commit:
+	uv run pre-commit run --all-files
