@@ -16,7 +16,6 @@ import { Route as RepositoriesIndexRouteImport } from './routes/repositories/ind
 import { Route as LlmProvidersIndexRouteImport } from './routes/llm-providers/index'
 import { Route as ReviewsReviewIdRouteImport } from './routes/reviews/$reviewId'
 import { Route as RepositoriesRepoIdRouteImport } from './routes/repositories/$repoId'
-import { Route as LlmProvidersProviderIdRouteImport } from './routes/llm-providers/$providerId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,15 +52,9 @@ const RepositoriesRepoIdRoute = RepositoriesRepoIdRouteImport.update({
   path: '/repositories/$repoId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LlmProvidersProviderIdRoute = LlmProvidersProviderIdRouteImport.update({
-  id: '/llm-providers/$providerId',
-  path: '/llm-providers/$providerId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/llm-providers/$providerId': typeof LlmProvidersProviderIdRoute
   '/repositories/$repoId': typeof RepositoriesRepoIdRoute
   '/reviews/$reviewId': typeof ReviewsReviewIdRoute
   '/llm-providers/': typeof LlmProvidersIndexRoute
@@ -71,7 +64,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/llm-providers/$providerId': typeof LlmProvidersProviderIdRoute
   '/repositories/$repoId': typeof RepositoriesRepoIdRoute
   '/reviews/$reviewId': typeof ReviewsReviewIdRoute
   '/llm-providers': typeof LlmProvidersIndexRoute
@@ -82,7 +74,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/llm-providers/$providerId': typeof LlmProvidersProviderIdRoute
   '/repositories/$repoId': typeof RepositoriesRepoIdRoute
   '/reviews/$reviewId': typeof ReviewsReviewIdRoute
   '/llm-providers/': typeof LlmProvidersIndexRoute
@@ -94,7 +85,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/llm-providers/$providerId'
     | '/repositories/$repoId'
     | '/reviews/$reviewId'
     | '/llm-providers/'
@@ -104,7 +94,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/llm-providers/$providerId'
     | '/repositories/$repoId'
     | '/reviews/$reviewId'
     | '/llm-providers'
@@ -114,7 +103,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/llm-providers/$providerId'
     | '/repositories/$repoId'
     | '/reviews/$reviewId'
     | '/llm-providers/'
@@ -125,7 +113,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LlmProvidersProviderIdRoute: typeof LlmProvidersProviderIdRoute
   RepositoriesRepoIdRoute: typeof RepositoriesRepoIdRoute
   ReviewsReviewIdRoute: typeof ReviewsReviewIdRoute
   LlmProvidersIndexRoute: typeof LlmProvidersIndexRoute
@@ -185,19 +172,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RepositoriesRepoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/llm-providers/$providerId': {
-      id: '/llm-providers/$providerId'
-      path: '/llm-providers/$providerId'
-      fullPath: '/llm-providers/$providerId'
-      preLoaderRoute: typeof LlmProvidersProviderIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LlmProvidersProviderIdRoute: LlmProvidersProviderIdRoute,
   RepositoriesRepoIdRoute: RepositoriesRepoIdRoute,
   ReviewsReviewIdRoute: ReviewsReviewIdRoute,
   LlmProvidersIndexRoute: LlmProvidersIndexRoute,
