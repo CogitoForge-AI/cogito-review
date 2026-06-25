@@ -1,29 +1,10 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from app.repositories.integration_settings import IntegrationSettingsRow
+from app.providers.opencode_config import build_opencode_config_from_llm_providers
 from app.repositories.llm_providers import LlmProviderRow
 from app.repositories.repo_integrations import RepoIntegrationRow
-from app.services.integration_settings import (
-    build_opencode_config_from_integration,
-    to_response,
-)
 from app.services.provider_resolution import build_providers_config
-
-
-def _legacy_row() -> IntegrationSettingsRow:
-    return IntegrationSettingsRow(
-        git_provider="github",
-        github_repo_full_name="acme/app",
-        github_webhook_secret="secret",
-        github_token="token",
-        llm_provider_id="openai-compat",
-        llm_base_url="https://llm.example.com/v1",
-        llm_api_token="sk-abc",
-        llm_model="my-model",
-        opencode_model="",
-        updated_at=datetime.now(UTC),
-    )
 
 
 def _llm_row() -> LlmProviderRow:
@@ -58,16 +39,9 @@ def _repo_row(llm_id) -> RepoIntegrationRow:
     )
 
 
-def test_to_response_masks_secrets() -> None:
-    response = to_response(_legacy_row())
-    assert response.github_token_configured is True
-    assert response.llm_api_token_configured is True
-    assert response.github_webhook_secret_configured is True
-    assert response.resolved_opencode_model == "openai-compat/my-model"
-
-
-def test_build_opencode_config_from_integration_literals() -> None:
-    config = build_opencode_config_from_integration(_legacy_row())
+def test_build_opencode_config_from_llm_providers_literals() -> None:
+    llm = _llm_row()
+    config = build_opencode_config_from_llm_providers([llm], llm)
     provider = config["provider"]["openai-compat"]
     assert provider["options"]["baseURL"] == "https://llm.example.com/v1"
     assert provider["options"]["apiKey"] == "sk-abc"

@@ -21,41 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/examples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Examples */
-        get: operations["list_examples_api_v1_examples_get"];
-        put?: never;
-        /** Create Example */
-        post: operations["create_example_api_v1_examples_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/examples/{example_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Example */
-        get: operations["get_example_api_v1_examples__example_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/reviews": {
         parameters: {
             query?: never;
@@ -179,30 +144,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/settings/integration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Settings Legacy
-         * @description Deprecated: use /settings/llm-providers and /settings/repos.
-         */
-        get: operations["get_settings_legacy_api_v1_settings_integration_get"];
-        /**
-         * Put Settings Legacy
-         * @description Deprecated: use /settings/llm-providers and /settings/repos.
-         */
-        put: operations["put_settings_legacy_api_v1_settings_integration_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/webhooks/github": {
         parameters: {
             query?: never;
@@ -241,26 +182,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** ExampleCreate */
-        ExampleCreate: {
-            /** Name */
-            name: string;
-        };
-        /** ExampleResponse */
-        ExampleResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Name */
-            name: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -274,70 +195,6 @@ export interface components {
             db: string;
             /** Version */
             version: string;
-        };
-        /** IntegrationSettingsResponse */
-        IntegrationSettingsResponse: {
-            /** Git Provider */
-            git_provider: string;
-            /** Github Repo Full Name */
-            github_repo_full_name: string;
-            /** Github Webhook Secret Configured */
-            github_webhook_secret_configured: boolean;
-            /** Github Token Configured */
-            github_token_configured: boolean;
-            /** Llm Provider Id */
-            llm_provider_id: string;
-            /** Llm Base Url */
-            llm_base_url: string;
-            /** Llm Model */
-            llm_model: string;
-            /** Llm Api Token Configured */
-            llm_api_token_configured: boolean;
-            /** Opencode Model */
-            opencode_model: string;
-            /** Resolved Opencode Model */
-            resolved_opencode_model: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /** IntegrationSettingsUpdate */
-        IntegrationSettingsUpdate: {
-            /** Git Provider */
-            git_provider?: string | null;
-            /**
-             * Github Repo Full Name
-             * @description owner/repo — empty accepts all repos
-             */
-            github_repo_full_name?: string | null;
-            /**
-             * Github Webhook Secret
-             * @description Omit to keep; empty string clears
-             */
-            github_webhook_secret?: string | null;
-            /**
-             * Github Token
-             * @description Omit to keep; empty string clears
-             */
-            github_token?: string | null;
-            /** Llm Provider Id */
-            llm_provider_id?: string | null;
-            /** Llm Base Url */
-            llm_base_url?: string | null;
-            /**
-             * Llm Api Token
-             * @description Omit to keep; empty string clears
-             */
-            llm_api_token?: string | null;
-            /** Llm Model */
-            llm_model?: string | null;
-            /**
-             * Opencode Model
-             * @description Optional override for OpenCode model ref
-             */
-            opencode_model?: string | null;
         };
         /** LlmProviderCreate */
         LlmProviderCreate: {
@@ -623,90 +480,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-        };
-    };
-    list_examples_api_v1_examples_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExampleResponse"][];
-                };
-            };
-        };
-    };
-    create_example_api_v1_examples_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExampleCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExampleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_example_api_v1_examples__example_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                example_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExampleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1029,59 +802,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_settings_legacy_api_v1_settings_integration_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IntegrationSettingsResponse"];
-                };
-            };
-        };
-    };
-    put_settings_legacy_api_v1_settings_integration_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IntegrationSettingsUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IntegrationSettingsResponse"];
-                };
             };
             /** @description Validation Error */
             422: {

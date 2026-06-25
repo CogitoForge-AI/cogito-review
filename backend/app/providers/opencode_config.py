@@ -88,34 +88,6 @@ def build_opencode_config_from_llm_providers(
     }
 
 
-def build_opencode_config_from_integration_row(
-    integration: Any,
-    infra: CodeReviewSettings | None = None,
-) -> dict[str, Any]:
-    """Deprecated: build from legacy singleton row shape."""
-    infra = infra or get_code_review_settings()
-    agent_name = infra.opencode_agent
-    agent_cfg = build_code_reviewer_agent_config(agent_name)
-    agent_cfg["model"] = integration.resolved_opencode_model
-
-    return {
-        "$schema": "https://opencode.ai/config.json",
-        "mcp": build_mcp_config(),
-        "tools": {
-            "bash": False,
-        },
-        "provider": llm_provider_block(
-            integration.llm_provider_id,
-            integration.llm_model,
-            base_url=integration.llm_base_url,
-            api_key=integration.llm_api_token,
-        ),
-        "agent": {
-            agent_name: agent_cfg,
-        },
-    }
-
-
 def render_opencode_config(
     output_path: Path,
     settings: CodeReviewSettings | None = None,
