@@ -4,16 +4,13 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from coreview_shared.auth.callback_hmac import sign_payload, verify_payload_signature
 from coreview_shared.schemas.review_callback import (
     ReviewCallbackError,
     ReviewCallbackRequest,
 )
 
-from app.services.review_callback import (
-    ReviewCallbackClient,
-    sign_payload,
-    verify_payload_signature,
-)
+from app.services.review_callback import ReviewCallbackClient
 
 
 def test_sign_payload_matches_hmac_sha256() -> None:
