@@ -32,7 +32,8 @@ ENV PYTHONUNBUFFERED=1 \
 
 COPY pyproject.toml uv.lock ./
 COPY shared/ shared/
-COPY ${BACKEND_DIR}/pyproject.toml ${BACKEND_DIR}/ ./${BACKEND_DIR}/
+COPY backend/pyproject.toml backend/README.md ./backend/
+COPY agent/pyproject.toml agent/README.md ./agent/
 
 WORKDIR /workspace/${BACKEND_DIR}
 
@@ -41,13 +42,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY shared/ /workspace/shared/
 COPY ${BACKEND_DIR}/ /workspace/${BACKEND_DIR}/
+COPY docker/dev-api-entrypoint.sh /usr/local/bin/dev-api-entrypoint.sh
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --all-groups
+    uv sync --locked --all-groups \
+ && chmod +x /usr/local/bin/dev-api-entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--reload", "--reload-dir", "app", "--reload-dir", "/workspace/shared/coreview_shared", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["/usr/local/bin/dev-api-entrypoint.sh"]
+CMD ["uv", "run", "python", "-m", "uvicorn", "app.main:app", "--reload", "--reload-dir", "app", "--reload-dir", "/workspace/shared/coreview_shared", "--host", "0.0.0.0", "--port", "8000"]
 
 # =============================================================================
 # Stage: web — Node + Vite HMR (source bind-mounted at runtime)
@@ -87,7 +91,8 @@ ENV PYTHONUNBUFFERED=1 \
 
 COPY pyproject.toml uv.lock ./
 COPY shared/ shared/
-COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/ ./${AGENT_DIR}/
+COPY backend/pyproject.toml backend/README.md ./backend/
+COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/README.md ./${AGENT_DIR}/
 
 WORKDIR /workspace/${AGENT_DIR}
 

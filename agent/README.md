@@ -24,7 +24,7 @@ The agent is **callback-only**: it does not connect to Postgres. The orchestrato
 | `NEXO_COREVIEW_CALLBACK_SECRET` | HMAC secret (`X-Review-Signature-256`) |
 | `NEXO_COREVIEW_CALLBACK_METADATA` | Opaque JSON passthrough (e.g. `delivery_id`) |
 
-Events follow **review-callback-v1** — see [`docs/review-callback-v1.schema.json`](../docs/review-callback-v1.schema.json).
+Events follow **review-callback-v1** — see [`shared/coreview_shared/schemas/review-callback-v1.schema.json`](../shared/coreview_shared/schemas/review-callback-v1.schema.json).
 
 ### Standalone (without Nexo)
 

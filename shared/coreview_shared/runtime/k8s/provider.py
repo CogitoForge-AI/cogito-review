@@ -15,7 +15,7 @@ class K8sRuntimeProvider:
         self,
         *,
         workspace_root: str,
-        agent_image: str = "nexo-coreview-agent:dev",
+        agent_image: str = "code-review-agent:dev",
         database_url: str = "",
         k8s_namespace: str = "coreview",
         k8s_agent_config_configmap: str = "opencode-config",

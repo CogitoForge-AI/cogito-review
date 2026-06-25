@@ -20,7 +20,7 @@ class DockerRuntimeProvider:
         workspace_root: str,
         docker_host: str | None = None,
         git_image: str = "alpine/git:latest",
-        agent_image: str = "nexo-coreview-agent:dev",
+        agent_image: str = "code-review-agent:dev",
         agent_network: str | None = None,
         database_url: str = "",
     ) -> None:

@@ -26,7 +26,7 @@ The agent does **not** read `repo_integrations` or `llm_providers` from the data
 
 ### Review callback (schema v1)
 
-Agent posts `review.started`, `review.completed`, and `review.failed` events to `NEXO_COREVIEW_CALLBACK_URL` with `X-Review-Signature-256` HMAC auth. Spec: [`docs/review-callback-v1.schema.json`](docs/review-callback-v1.schema.json). Nexo backend receives them at `POST /api/v1/agent/review-events` and persists to Postgres. Third-party orchestrators can implement the same contract without Nexo schema.
+Agent posts `review.started`, `review.completed`, and `review.failed` events to `NEXO_COREVIEW_CALLBACK_URL` with `X-Review-Signature-256` HMAC auth. Spec: [`shared/coreview_shared/schemas/review-callback-v1.schema.json`](shared/coreview_shared/schemas/review-callback-v1.schema.json) (Pydantic models in `review_callback.py`). Nexo backend receives them at `POST /api/v1/agent/review-events` and persists to Postgres. Third-party orchestrators can implement the same contract without Nexo schema.
 
 ### CLI modes
 

@@ -35,11 +35,13 @@ WORKDIR /workspace
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_NO_DEV=1 \
-    UV_PYTHON_DOWNLOADS=0
+    UV_PYTHON_DOWNLOADS=0 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
 
 COPY pyproject.toml uv.lock ./
 COPY shared/ shared/
-COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/ ./${AGENT_DIR}/
+COPY backend/pyproject.toml backend/README.md ./backend/
+COPY ${AGENT_DIR}/pyproject.toml ${AGENT_DIR}/README.md ./${AGENT_DIR}/
 
 WORKDIR /workspace/${AGENT_DIR}
 
@@ -89,7 +91,7 @@ ENV PYTHONUNBUFFERED=1 \
     OPENCODE_CONFIG=/config/opencode.json \
     NEXO_COREVIEW_WORKSPACE_ROOT=/workspaces
 
-COPY --from=python-builder /workspace/.venv /app/.venv
+COPY --from=python-builder /app/.venv /app/.venv
 COPY --from=python-builder /workspace/agent/app /app/app
 COPY --from=python-builder /workspace/agent/pyproject.toml /app/pyproject.toml
 

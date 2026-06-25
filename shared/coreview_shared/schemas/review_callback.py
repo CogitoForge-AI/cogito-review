@@ -1,3 +1,8 @@
+"""Review callback event models (schema v1).
+
+JSON Schema: ``review-callback-v1.schema.json`` in this directory.
+"""
+
 from datetime import datetime
 from typing import Any, Literal
 

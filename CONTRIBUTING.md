@@ -63,7 +63,7 @@ Production uses only the base compose file; `docker-compose.override.yaml` is no
 | [`dev.Dockerfile`](dev.Dockerfile) | Multi-stage dev images (`target: api` / `target: web`) |
 | [`Dockerfile`](Dockerfile) | Production bundle (API + static SPA) |
 
-Docker dev stack services: `api`, `worker`, `redis`, `db`. The worker mounts `/var/run/docker.sock`, loads review config from Postgres, injects `NEXO_COREVIEW_*` env vars, and spawns a per-review agent container (`nexo-coreview-agent`).
+Docker dev stack services: `api`, `worker`, `redis`, `db`. The worker mounts `/var/run/docker.sock`, loads review config from Postgres, injects `NEXO_COREVIEW_*` env vars, and spawns a per-review agent container built locally as `code-review-agent:dev` (`agent-image` service, `pull_policy: never` — no registry pull).
 
 ## Review execution flow
 

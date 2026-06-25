@@ -77,7 +77,8 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 COPY pyproject.toml uv.lock ./
 COPY shared/ shared/
-COPY ${BACKEND_DIR}/pyproject.toml ${BACKEND_DIR}/ ./${BACKEND_DIR}/
+COPY backend/pyproject.toml backend/README.md ./backend/
+COPY agent/pyproject.toml agent/README.md ./agent/
 
 WORKDIR /workspace/${BACKEND_DIR}
 

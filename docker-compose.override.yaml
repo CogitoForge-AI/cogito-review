@@ -118,7 +118,7 @@ services:
       NEXO_COREVIEW_CELERY_BROKER_URL: redis://redis:6379/0
       NEXO_COREVIEW_WORKSPACE_ROOT: /workspaces
       NEXO_COREVIEW_DOCKER_HOST: unix:///var/run/docker.sock
-      NEXO_COREVIEW_AGENT_IMAGE: ${NEXO_COREVIEW_AGENT_IMAGE:-nexo-coreview-agent:dev}
+      NEXO_COREVIEW_AGENT_IMAGE: ${NEXO_COREVIEW_AGENT_IMAGE:-code-review-agent:dev}
       NEXO_COREVIEW_AGENT_NETWORK: coreview
       NEXO_COREVIEW_OPENCODE_LOG_LEVEL: ${NEXO_COREVIEW_OPENCODE_LOG_LEVEL:-INFO}
       NEXO_COREVIEW_AGENT_CALLBACK_URL: http://api:8000/api/v1/agent/review-events
@@ -162,6 +162,9 @@ services:
         "-o",
         "/config/opencode.generated.json",
       ]
+
+  agent-image:
+    pull_policy: never
 
 volumes:
   backend_venv:

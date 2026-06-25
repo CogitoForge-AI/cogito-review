@@ -63,7 +63,7 @@ class CodeReviewSettings(BaseSettings):
     opencode_agent: str = "code-reviewer"
     opencode_log_level: str = "INFO"
     review_timeout_seconds: int = 600
-    agent_image: str = "nexo-coreview-agent:dev"
+    agent_image: str = "code-review-agent:dev"
     # Docker network for per-review agent containers (e.g. coreview in Compose).
     # Empty = publish OpenCode port to host (native worker dev).
     agent_network: str = ""
