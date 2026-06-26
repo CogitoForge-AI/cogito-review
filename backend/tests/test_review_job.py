@@ -17,23 +17,23 @@ from app.providers.factory import build_runtime_provider
 
 def _sample_environment() -> dict[str, str]:
     return {
-        "NEXO_COREVIEW_REPO_FULL_NAME": "org/repo",
-        "NEXO_COREVIEW_PR_NUMBER": "1",
-        "NEXO_COREVIEW_HEAD_SHA": "abc",
-        "NEXO_COREVIEW_GITHUB_TOKEN": "ghp_test",
-        "NEXO_COREVIEW_LLM_PROVIDER_ID": "openai-compat",
-        "NEXO_COREVIEW_LLM_BASE_URL": "https://api.example.com/v1",
-        "NEXO_COREVIEW_LLM_API_TOKEN": "sk-test",
-        "NEXO_COREVIEW_LLM_MODEL": "gpt-4o",
-        "NEXO_COREVIEW_OPENCODE_MODEL": "openai-compat/gpt-4o",
-        "NEXO_COREVIEW_OPENCODE_AGENT": "code-reviewer",
-        "NEXO_COREVIEW_REVIEW_TIMEOUT_SECONDS": "600",
-        "NEXO_COREVIEW_OPENCODE_LOG_LEVEL": "INFO",
-        "NEXO_COREVIEW_WORKSPACE_ROOT": "/workspaces",
-        "NEXO_COREVIEW_REVIEW_ID": "550e8400-e29b-41d4-a716-446655440000",
-        "NEXO_COREVIEW_CALLBACK_URL": "http://api:8000/api/v1/agent/review-events",
-        "NEXO_COREVIEW_CALLBACK_SECRET": "dev-callback-secret",
-        "NEXO_COREVIEW_CALLBACK_METADATA": "{}",
+        "COGITO_REVIEW_REPO_FULL_NAME": "org/repo",
+        "COGITO_REVIEW_PR_NUMBER": "1",
+        "COGITO_REVIEW_HEAD_SHA": "abc",
+        "COGITO_REVIEW_GITHUB_TOKEN": "ghp_test",
+        "COGITO_REVIEW_LLM_PROVIDER_ID": "openai-compat",
+        "COGITO_REVIEW_LLM_BASE_URL": "https://api.example.com/v1",
+        "COGITO_REVIEW_LLM_API_TOKEN": "sk-test",
+        "COGITO_REVIEW_LLM_MODEL": "gpt-4o",
+        "COGITO_REVIEW_OPENCODE_MODEL": "openai-compat/gpt-4o",
+        "COGITO_REVIEW_OPENCODE_AGENT": "code-reviewer",
+        "COGITO_REVIEW_REVIEW_TIMEOUT_SECONDS": "600",
+        "COGITO_REVIEW_OPENCODE_LOG_LEVEL": "INFO",
+        "COGITO_REVIEW_WORKSPACE_ROOT": "/workspaces",
+        "COGITO_REVIEW_REVIEW_ID": "550e8400-e29b-41d4-a716-446655440000",
+        "COGITO_REVIEW_CALLBACK_URL": "http://api:8000/api/v1/agent/review-events",
+        "COGITO_REVIEW_CALLBACK_SECRET": "dev-callback-secret",
+        "COGITO_REVIEW_CALLBACK_METADATA": "{}",
         "PYTHONUNBUFFERED": "1",
     }
 
@@ -54,14 +54,14 @@ def test_agent_database_url_unchanged_on_compose_network() -> None:
 def test_build_docker_review_job_spec_network_and_labels() -> None:
     spec = build_docker_review_job_spec(
         review_id="550e8400-e29b-41d4-a716-446655440000",
-        agent_image="nexo-coreview-agent:test",
+        agent_image="cogito-review-agent:test",
         environment=_sample_environment(),
         agent_network="coreview",
     )
 
-    assert spec.image == "nexo-coreview-agent:test"
+    assert spec.image == "cogito-review-agent:test"
     assert spec.command == [
-        "coreview-agent",
+        "cogito-review-agent",
         "review",
         "run",
         "--review-id",
@@ -76,7 +76,7 @@ def test_build_docker_review_job_spec_network_and_labels() -> None:
     assert (
         spec.labels["nexo.coreview.review_id"] == "550e8400-e29b-41d4-a716-446655440000"
     )
-    assert spec.environment["NEXO_COREVIEW_GITHUB_TOKEN"] == "ghp_test"
+    assert spec.environment["COGITO_REVIEW_GITHUB_TOKEN"] == "ghp_test"
 
 
 def test_build_docker_review_job_spec_resource_limits() -> None:
@@ -123,7 +123,7 @@ def test_build_docker_review_job_spec_extra_hosts_without_network() -> None:
 async def test_docker_job_executor_runs_container() -> None:
     spec = build_docker_review_job_spec(
         review_id="550e8400-e29b-41d4-a716-446655440000",
-        agent_image="nexo-coreview-agent:test",
+        agent_image="cogito-review-agent:test",
         environment=_sample_environment(),
         agent_network="coreview",
         agent_mem_limit="1g",
@@ -148,7 +148,7 @@ async def test_docker_job_executor_runs_container() -> None:
     mock_client.containers.list.assert_called_once()
     mock_client.containers.run.assert_called_once()
     run_kwargs = mock_client.containers.run.call_args.kwargs
-    assert run_kwargs["image"] == "nexo-coreview-agent:test"
+    assert run_kwargs["image"] == "cogito-review-agent:test"
     assert run_kwargs["command"] == spec.command
     assert run_kwargs["network"] == "coreview"
     assert run_kwargs["detach"] is True
@@ -164,7 +164,7 @@ async def test_docker_job_executor_runs_container() -> None:
 async def test_docker_runtime_provider_raises_on_nonzero_exit() -> None:
     provider = DockerRuntimeProvider(
         workspace_root="/workspaces",
-        agent_image="nexo-coreview-agent:test",
+        agent_image="cogito-review-agent:test",
         agent_network="coreview",
         database_url="postgresql://app:app@postgres:5432/app",
     )

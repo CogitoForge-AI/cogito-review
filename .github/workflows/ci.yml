@@ -171,9 +171,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: nexo-coreview
+          - name: cogito-review
             file: Dockerfile
-          - name: nexo-coreview-agent
+          - name: cogito-review-agent
             file: agent/Dockerfile
     steps:
       - uses: actions/checkout@v4
@@ -198,9 +198,9 @@ jobs:
 
       - name: Smoke test image entrypoints
         run: |
-          if [ "${{ matrix.name }}" = "nexo-coreview" ]; then
+          if [ "${{ matrix.name }}" = "cogito-review" ]; then
             docker run --rm ${{ matrix.name }}:ci uvicorn --version
-            docker run --rm ${{ matrix.name }}:ci code-review --help
+            docker run --rm ${{ matrix.name }}:ci cogito-review --help
           else
-            docker run --rm ${{ matrix.name }}:ci coreview-agent --help
+            docker run --rm ${{ matrix.name }}:ci cogito-review-agent --help
           fi

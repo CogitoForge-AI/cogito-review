@@ -25,13 +25,13 @@ def require_review_env(settings: AgentSettings) -> None:
     for field in required_fields:
         value = getattr(settings, field, "")
         if not str(value).strip():
-            missing.append(f"NEXO_COREVIEW_{field.upper()}")
+            missing.append(f"COGITO_REVIEW_{field.upper()}")
 
     if not settings.resolved_opencode_model:
-        missing.append("NEXO_COREVIEW_OPENCODE_MODEL (or LLM provider + model)")
+        missing.append("COGITO_REVIEW_OPENCODE_MODEL (or LLM provider + model)")
 
     if settings.pr_number <= 0:
-        missing.append("NEXO_COREVIEW_PR_NUMBER")
+        missing.append("COGITO_REVIEW_PR_NUMBER")
 
     if missing:
         msg = f"Missing required review environment: {', '.join(missing)}"

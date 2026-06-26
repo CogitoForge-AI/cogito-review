@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
 class AgentSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="NEXO_COREVIEW_",
+        env_prefix="COGITO_REVIEW_",
         env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",

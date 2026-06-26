@@ -1,1 +1,1 @@
-"""Shared contracts and provider implementations for Nexo Co-Review."""
+"""Shared contracts and provider implementations for Cogito Review."""

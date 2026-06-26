@@ -63,7 +63,7 @@ def _started_payload(review_id: str) -> dict:
         "event": "review.started",
         "review_id": review_id,
         "occurred_at": "2026-06-25T10:00:00Z",
-        "agent": {"name": "coreview-agent", "version": "0.1.0"},
+        "agent": {"name": "cogito-review-agent", "version": "0.1.0"},
         "request": {
             "git_provider": "github",
             "repo_full_name": "org/repo",

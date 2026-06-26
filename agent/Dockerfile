@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 
-# Nexo Co-Review agent image — OpenCode + MCP + git in one container.
+# Cogito Review agent image — OpenCode + MCP + git in one container.
 
 # --- Build metadata ---
 ARG VERSION=dev
 ARG BUILD_DATE
 ARG VCS_REF
-ARG IMAGE_AUTHORS="Nexo <ask@nkthanh.dev>"
-ARG IMAGE_TITLE="nexo-coreview-agent"
+ARG IMAGE_AUTHORS="CogitoForge AI <ask@nkthanh.dev>"
+ARG IMAGE_TITLE="cogito-review-agent"
 
 # --- Tool versions ---
 ARG PYTHON_VERSION=3.11
@@ -22,7 +22,7 @@ FROM ${OPENCODE_IMAGE} AS opencode-base
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}-alpine AS uv
 
 # =============================================================================
-# Stage: python-builder — agent MCP server (coreview-agent serve)
+# Stage: python-builder — agent MCP server (cogito-review-agent serve)
 # =============================================================================
 FROM python:${PYTHON_VERSION}-alpine AS python-builder
 
@@ -66,7 +66,7 @@ ARG IMAGE_AUTHORS
 ARG IMAGE_TITLE
 
 LABEL org.opencontainers.image.title="${IMAGE_TITLE}" \
-      org.opencontainers.image.description="Nexo Co-Review agent — OpenCode CLI review runner with bundled MCP and git" \
+      org.opencontainers.image.description="Cogito Review agent — OpenCode CLI review runner with bundled MCP and git" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.revision="${VCS_REF}" \
@@ -94,7 +94,7 @@ ENV PYTHONUNBUFFERED=1 \
     APP_VERSION=${VERSION} \
     PATH="/app/.venv/bin:$PATH" \
     OPENCODE_CONFIG=/config/opencode.json \
-    NEXO_COREVIEW_WORKSPACE_ROOT=/workspaces
+    COGITO_REVIEW_WORKSPACE_ROOT=/workspaces
 
 COPY --from=python-builder /app/.venv /app/.venv
 COPY --from=python-builder /workspace/agent/app /app/app

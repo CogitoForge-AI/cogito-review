@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nexo-coreview.dev/schemas/review-callback/v1",
+  "$id": "https://cogito-review.dev/schemas/review-callback/v1",
   "title": "ReviewCallbackEvent",
   "description": "Generic agent review callback payload (schema version 1.0)",
   "type": "object",

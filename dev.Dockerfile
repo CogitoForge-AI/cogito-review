@@ -109,4 +109,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8001
 
-CMD ["uv", "run", "coreview-agent", "serve", "--transport", "sse", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uv", "run", "cogito-review-agent", "serve", "--transport", "sse", "--host", "0.0.0.0", "--port", "8001"]

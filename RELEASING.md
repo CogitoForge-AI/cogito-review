@@ -1,6 +1,6 @@
 # Releasing
 
-This document describes the Git workflow, pull request process, and how versioned releases reach [GHCR](https://ghcr.io/nexo-agent/nexo-coreview).
+This document describes the Git workflow, pull request process, and how versioned releases reach [GHCR](https://ghcr.io/cogitoforge-ai/cogito-review).
 
 For day-to-day development setup, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -107,7 +107,7 @@ Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 | Agent lint & test | Ruff, pytest |
 | Frontend lint & typecheck | ESLint, `tsc` |
 | Integration tests | Postgres + dbmate migrate + pytest `-m integration` |
-| Docker build (verify) | Builds `nexo-coreview` and `nexo-coreview-agent` without pushing |
+| Docker build (verify) | Builds `cogito-review` and `cogito-review-agent` without pushing |
 
 All jobs must pass before merge.
 
@@ -123,7 +123,7 @@ When `dev` is stable and you want a production release:
 
 ### 1. Prepare
 
-- Confirm [Actions → CI](https://github.com/Nexo-Agent/code-review/actions/workflows/ci.yml) is green on `dev`.
+- Confirm [Actions → CI](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/ci.yml) is green on `dev`.
 - Review merged PRs since the last release.
 - Note any **database migrations** — production deploy must run `migrate` before or during rollout.
 - Note any **breaking config** changes for operators (`.env`, Settings UI).
@@ -158,10 +158,10 @@ After the PR merges:
 
    | Image | Example tags |
    |-------|----------------|
-   | `ghcr.io/nexo-agent/nexo-coreview` | `latest`, `sha-abc1234` |
-   | `ghcr.io/nexo-agent/nexo-coreview-agent` | `latest`, `sha-abc1234` |
+   | `ghcr.io/cogitoforge-ai/cogito-review` | `latest`, `sha-abc1234` |
+   | `ghcr.io/cogitoforge-ai/cogito-review-agent` | `latest`, `sha-abc1234` |
 
-Track progress: [Actions → Publish](https://github.com/Nexo-Agent/code-review/actions/workflows/publish.yml).
+Track progress: [Actions → Publish](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/publish.yml).
 
 ### 4. Sync `dev` with `main`
 
@@ -226,17 +226,17 @@ Pin images by semver or digest — avoid floating `latest` in production.
 
 ```bash
 # Semver
-docker pull ghcr.io/nexo-agent/nexo-coreview:0.2.0
-docker pull ghcr.io/nexo-agent/nexo-coreview-agent:0.2.0
+docker pull ghcr.io/cogitoforge-ai/cogito-review:0.2.0
+docker pull ghcr.io/cogitoforge-ai/cogito-review-agent:0.2.0
 
 # Or by commit
-docker pull ghcr.io/nexo-agent/nexo-coreview:sha-abc1234
+docker pull ghcr.io/cogitoforge-ai/cogito-review:sha-abc1234
 ```
 
 Update `.env` (or your orchestrator):
 
 ```bash
-NEXO_COREVIEW_AGENT_IMAGE=ghcr.io/nexo-agent/nexo-coreview-agent:0.2.0
+COGITO_REVIEW_AGENT_IMAGE=ghcr.io/cogitoforge-ai/cogito-review-agent:0.2.0
 ```
 
 Deploy with Compose:
@@ -281,16 +281,16 @@ git push origin dev
 
 Normally publish is fully automated. To rebuild and push without a new merge:
 
-1. Open [Actions → Publish](https://github.com/Nexo-Agent/code-review/actions/workflows/publish.yml).
+1. Open [Actions → Publish](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/publish.yml).
 2. **Run workflow** → choose branch (usually `main`).
 
 Use sparingly — prefer tag or merge-driven releases for traceability.
 
 ## GHCR package visibility
 
-First publish creates packages under the `Nexo-Agent` org. To allow anonymous `docker pull`:
+First publish creates packages under the `CogitoForge-AI` org. To allow anonymous `docker pull`:
 
-1. GitHub → **Packages** → `nexo-coreview` / `nexo-coreview-agent`
+1. GitHub → **Packages** → `cogito-review` / `cogito-review-agent`
 2. **Package settings** → **Change visibility** → **Public**
 
 Private packages require `docker login ghcr.io` for pulls.
@@ -298,7 +298,7 @@ Private packages require `docker login ghcr.io` for pulls.
 Production `.env` should reference the full image path:
 
 ```bash
-NEXO_COREVIEW_AGENT_IMAGE=ghcr.io/nexo-agent/nexo-coreview-agent:0.2.0
+COGITO_REVIEW_AGENT_IMAGE=ghcr.io/cogitoforge-ai/cogito-review-agent:0.2.0
 ```
 
 ## Recommended branch protection
@@ -327,7 +327,7 @@ feature/* ──PR──► dev ──PR──► main ──push──► GHCR 
 | Open feature PR | base: `dev` |
 | Release to production | merge `dev` → `main` |
 | Semver release | `git tag -a vX.Y.Z && git push origin vX.Y.Z` |
-| Pull release images | `docker pull ghcr.io/nexo-agent/nexo-coreview:VERSION` |
+| Pull release images | `docker pull ghcr.io/cogitoforge-ai/cogito-review:VERSION` |
 | Deploy | `make prod-up` |
 
 ## Related docs

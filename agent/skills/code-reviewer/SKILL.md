@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: >-
-  Structured pull-request code reviews for Nexo Co-Review (`nexo-coreview`).
+  Structured pull-request code reviews for Cogito Review (`cogito-review`).
   Use when reviewing PR diffs for bugs, security, performance, missing tests, or
   API breaking changes. Run lint, typecheck, and unit tests via bash when
   available. Output must be JSON with a findings array; each finding body must
@@ -9,13 +9,13 @@ description: >-
   requests; default to English when none is specified.
 license: MIT
 metadata:
-  author: Nexo
+  author: CogitoForge AI
   version: "0.3.0"
 ---
 
-# Code Reviewer (Nexo Co-Review)
+# Code Reviewer (Cogito Review)
 
-Professional PR review for Nexo Co-Review. Runs headless inside the agent
+Professional PR review for Cogito Review. Runs headless inside the agent
 container — no interactive prompts, plan mode, or GitHub comment posting via MCP.
 
 The **bash** tool is enabled: use it to run lint, typecheck, and unit tests in
@@ -41,7 +41,7 @@ the PR git worktree (session workspace directory).
    - See [references/validation-commands.md](references/validation-commands.md)
 4. **Analyze** — Combine diff inspection (read, grep, glob, lsp), impact tracing,
    and command output. Treat failing checks as strong evidence for findings.
-5. **Return findings** — Respond with JSON only (see Output format). Nexo posts
+5. **Return findings** — Respond with JSON only (see Output format). Cogito Review posts
    to the remote; do not post comments via MCP.
 
 Do **not** enter plan mode, ask the user questions, spawn subagents, edit files,
@@ -97,13 +97,13 @@ Return JSON only (no free-form markdown outside JSON):
 ```
 
 When there are no actionable issues, return `{ "findings": [] }`. Do not add a
-synthetic "LGTM" finding — Nexo posts the summary automatically.
+synthetic "LGTM" finding — Cogito Review posts the summary automatically.
 
 ## PR review message template (required)
 
 Every finding **`body`** must use the three-section template (**Problem** /
 **Impact** / **Recommendation** in English, or equivalent headings in the
-requested language). Titles and severity labels are added by Nexo when posting
+requested language). Titles and severity labels are added by Cogito Review when posting
 to GitHub — do not duplicate them in `body`.
 
 Full rules, rendered comment examples, attribution footer, and LGTM behavior:

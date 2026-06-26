@@ -339,7 +339,7 @@ function RepoIntegrationForm({
                 rows={4}
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
-                placeholder="Leave empty to use the default code-review prompt"
+                placeholder="Leave empty to use the default cogito-review prompt"
               />
             </Field>
           ) : null}

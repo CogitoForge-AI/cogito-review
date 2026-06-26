@@ -30,7 +30,7 @@ export function AppShell({
       <aside className="bg-card flex w-44 shrink-0 flex-col border-r">
         <div className="flex h-11 items-center border-b px-3">
           <span className="truncate text-sm font-semibold tracking-tight">
-            Nexo Co-Review
+            Cogito Review
           </span>
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-2">

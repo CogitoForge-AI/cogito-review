@@ -30,5 +30,5 @@ async def providers_for_repo(
     del repo_full_name
     if ctx.providers is not None:
         return ctx.providers
-    msg = "ToolContext has no providers; inject NEXO_COREVIEW_GITHUB_TOKEN via env"
+    msg = "ToolContext has no providers; inject COGITO_REVIEW_GITHUB_TOKEN via env"
     raise RuntimeError(msg)

@@ -46,10 +46,10 @@ class ReviewRuntimeConfig:
 
 
 class CodeReviewSettings(BaseSettings):
-    """Infrastructure settings from NEXO_COREVIEW_* env vars."""
+    """Infrastructure settings from COGITO_REVIEW_* env vars."""
 
     model_config = SettingsConfigDict(
-        env_prefix="NEXO_COREVIEW_",
+        env_prefix="COGITO_REVIEW_",
         env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
@@ -68,7 +68,7 @@ class CodeReviewSettings(BaseSettings):
     opencode_agent: str = "code-reviewer"
     opencode_log_level: str = "INFO"
     review_timeout_seconds: int = 600
-    agent_image: str = "code-review-agent:dev"
+    agent_image: str = "cogito-review-agent:dev"
     # Per-review agent limits (Docker mem_limit / nano_cpus). Empty or 0 = no cap.
     agent_mem_limit: str = "1g"
     agent_cpus: float = 1.0

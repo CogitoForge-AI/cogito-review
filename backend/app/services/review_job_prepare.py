@@ -50,39 +50,39 @@ def build_agent_environment(
     infra: CodeReviewSettings,
 ) -> dict[str, str]:
     if not infra.agent_callback_url.strip():
-        msg = "NEXO_COREVIEW_AGENT_CALLBACK_URL is not configured"
+        msg = "COGITO_REVIEW_AGENT_CALLBACK_URL is not configured"
         raise ValueError(msg)
     if not infra.agent_callback_secret.strip():
-        msg = "NEXO_COREVIEW_AGENT_CALLBACK_SECRET is not configured"
+        msg = "COGITO_REVIEW_AGENT_CALLBACK_SECRET is not configured"
         raise ValueError(msg)
 
     env: dict[str, str] = {
-        "NEXO_COREVIEW_REPO_FULL_NAME": review.repo_full_name,
-        "NEXO_COREVIEW_PR_NUMBER": str(review.pr_number),
-        "NEXO_COREVIEW_HEAD_SHA": review.head_sha,
-        "NEXO_COREVIEW_GIT_PROVIDER": repo_integration.git_provider,
-        "NEXO_COREVIEW_GITHUB_TOKEN": repo_integration.github_token,
-        "NEXO_COREVIEW_LLM_PROVIDER_ID": llm_provider.provider_id,
-        "NEXO_COREVIEW_LLM_BASE_URL": llm_provider.base_url,
-        "NEXO_COREVIEW_LLM_API_TOKEN": llm_provider.api_token,
-        "NEXO_COREVIEW_LLM_MODEL": llm_provider.model,
-        "NEXO_COREVIEW_OPENCODE_MODEL": llm_provider.resolved_opencode_model,
-        "NEXO_COREVIEW_OPENCODE_AGENT": infra.opencode_agent,
-        "NEXO_COREVIEW_REVIEW_TIMEOUT_SECONDS": str(infra.review_timeout_seconds),
-        "NEXO_COREVIEW_OPENCODE_LOG_LEVEL": infra.opencode_log_level,
-        "NEXO_COREVIEW_WORKSPACE_ROOT": infra.workspace_root,
-        "NEXO_COREVIEW_REVIEW_ID": review_id,
-        "NEXO_COREVIEW_CALLBACK_URL": infra.agent_callback_url,
-        "NEXO_COREVIEW_CALLBACK_SECRET": infra.agent_callback_secret,
-        "NEXO_COREVIEW_CALLBACK_METADATA": _callback_metadata(review),
+        "COGITO_REVIEW_REPO_FULL_NAME": review.repo_full_name,
+        "COGITO_REVIEW_PR_NUMBER": str(review.pr_number),
+        "COGITO_REVIEW_HEAD_SHA": review.head_sha,
+        "COGITO_REVIEW_GIT_PROVIDER": repo_integration.git_provider,
+        "COGITO_REVIEW_GITHUB_TOKEN": repo_integration.github_token,
+        "COGITO_REVIEW_LLM_PROVIDER_ID": llm_provider.provider_id,
+        "COGITO_REVIEW_LLM_BASE_URL": llm_provider.base_url,
+        "COGITO_REVIEW_LLM_API_TOKEN": llm_provider.api_token,
+        "COGITO_REVIEW_LLM_MODEL": llm_provider.model,
+        "COGITO_REVIEW_OPENCODE_MODEL": llm_provider.resolved_opencode_model,
+        "COGITO_REVIEW_OPENCODE_AGENT": infra.opencode_agent,
+        "COGITO_REVIEW_REVIEW_TIMEOUT_SECONDS": str(infra.review_timeout_seconds),
+        "COGITO_REVIEW_OPENCODE_LOG_LEVEL": infra.opencode_log_level,
+        "COGITO_REVIEW_WORKSPACE_ROOT": infra.workspace_root,
+        "COGITO_REVIEW_REVIEW_ID": review_id,
+        "COGITO_REVIEW_CALLBACK_URL": infra.agent_callback_url,
+        "COGITO_REVIEW_CALLBACK_SECRET": infra.agent_callback_secret,
+        "COGITO_REVIEW_CALLBACK_METADATA": _callback_metadata(review),
         "PYTHONUNBUFFERED": "1",
     }
     if repo_integration.system_prompt.strip():
-        env["NEXO_COREVIEW_SYSTEM_PROMPT"] = repo_integration.system_prompt
+        env["COGITO_REVIEW_SYSTEM_PROMPT"] = repo_integration.system_prompt
     if repo_integration.git_provider == "azure-devops":
-        env["NEXO_COREVIEW_ADO_ORGANIZATION"] = repo_integration.ado_organization
-        env["NEXO_COREVIEW_ADO_PROJECT"] = repo_integration.ado_project
-        env["NEXO_COREVIEW_ADO_PAT"] = repo_integration.ado_pat
+        env["COGITO_REVIEW_ADO_ORGANIZATION"] = repo_integration.ado_organization
+        env["COGITO_REVIEW_ADO_PROJECT"] = repo_integration.ado_project
+        env["COGITO_REVIEW_ADO_PAT"] = repo_integration.ado_pat
     return env
 
 

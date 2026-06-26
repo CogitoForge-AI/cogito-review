@@ -53,7 +53,7 @@ def test_review_callback_event_roundtrip() -> None:
         event="review.started",
         review_id="550e8400-e29b-41d4-a716-446655440000",
         occurred_at=datetime.now(tz=UTC),
-        agent=ReviewCallbackAgent(name="coreview-agent", version="0.1.0"),
+        agent=ReviewCallbackAgent(name="cogito-review-agent", version="0.1.0"),
         request=ReviewCallbackRequest(
             git_provider="github",
             repo_full_name="org/repo",

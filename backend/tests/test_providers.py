@@ -239,7 +239,7 @@ def test_build_opencode_config_includes_mcp() -> None:
     assert "mcp" in config
     assert config["mcp"]["coreview"]["type"] == "local"
     assert config["mcp"]["coreview"]["command"] == [
-        "coreview-agent",
+        "cogito-review-agent",
         "serve",
         "--transport",
         "stdio",

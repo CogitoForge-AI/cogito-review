@@ -1,7 +1,7 @@
 [project]
 name = "coreview-shared"
-version = "0.1.5"
-description = "Shared protocols, providers, and contracts for Nexo Co-Review"
+version = "0.0.1"
+description = "Shared protocols, providers, and contracts for Cogito Review"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

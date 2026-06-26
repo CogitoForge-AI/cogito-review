@@ -7,7 +7,7 @@ endif
 
 COMPOSE := docker compose
 COMPOSE_PROD := docker compose -f docker-compose.yaml
-AGENT_IMAGE ?= $(or $(NEXO_COREVIEW_AGENT_IMAGE),code-review-agent:dev)
+AGENT_IMAGE ?= $(or $(COGITO_REVIEW_AGENT_IMAGE),cogito-review-agent:dev)
 
 # --- Stack lifecycle (Docker Compose only) ---
 
@@ -37,7 +37,7 @@ migrate-down:
 	$(COMPOSE) --profile tools run --rm migrate-down
 
 render-opencode-config: migrate
-	cd backend && uv run code-review config render-opencode
+	cd backend && uv run cogito-review config render-opencode
 
 build-agent:
 	docker build -f agent/Dockerfile \

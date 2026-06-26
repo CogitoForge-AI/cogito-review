@@ -12,8 +12,8 @@ from app.toolbase.context import ToolContext, build_tool_context
 logger = logging.getLogger(__name__)
 
 app = typer.Typer(
-    name="coreview-agent",
-    help="Nexo Co-Review agent — MCP Git/CI tools and OpenCode runtime.",
+    name="cogito-review-agent",
+    help="Cogito Review agent — MCP Git/CI tools and OpenCode runtime.",
     no_args_is_help=True,
 )
 
@@ -37,7 +37,7 @@ def serve(
         None, help="HTTP port for SSE transport (default from config)."
     ),
 ) -> None:
-    """Start the Nexo Co-Review MCP server (coreview Git/CI tools)."""
+    """Start the Cogito Review MCP server (coreview Git/CI tools)."""
 
     async def _run() -> None:
         ctx = _resolve_tool_context()

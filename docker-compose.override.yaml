@@ -110,13 +110,13 @@ services:
       context: .
       dockerfile: dev.Dockerfile
       target: api
-    command: ["uv", "run", "code-review", "job", "worker"]
+    command: ["uv", "run", "cogito-review", "job", "worker"]
     environment:
-      NEXO_COREVIEW_WORKSPACE_ROOT: /workspaces
-      NEXO_COREVIEW_DOCKER_HOST: unix:///var/run/docker.sock
-      NEXO_COREVIEW_AGENT_IMAGE: ${NEXO_COREVIEW_AGENT_IMAGE:-code-review-agent:dev}
-      NEXO_COREVIEW_AGENT_NETWORK: coreview
-      NEXO_COREVIEW_OPENCODE_LOG_LEVEL: ${NEXO_COREVIEW_OPENCODE_LOG_LEVEL:-INFO}
+      COGITO_REVIEW_WORKSPACE_ROOT: /workspaces
+      COGITO_REVIEW_DOCKER_HOST: unix:///var/run/docker.sock
+      COGITO_REVIEW_AGENT_IMAGE: ${COGITO_REVIEW_AGENT_IMAGE:-cogito-review-agent:dev}
+      COGITO_REVIEW_AGENT_NETWORK: coreview
+      COGITO_REVIEW_OPENCODE_LOG_LEVEL: ${COGITO_REVIEW_OPENCODE_LOG_LEVEL:-INFO}
     volumes:
       - ./backend:/workspace/backend
       - ./shared:/workspace/shared

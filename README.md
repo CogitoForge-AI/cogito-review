@@ -1,11 +1,11 @@
-# Nexo Co-Review
+# Cogito Review
 
-[![CI](https://github.com/Nexo-Agent/code-review/actions/workflows/ci.yml/badge.svg)](https://github.com/Nexo-Agent/code-review/actions/workflows/ci.yml)
-[![Publish](https://github.com/Nexo-Agent/code-review/actions/workflows/publish.yml/badge.svg)](https://github.com/Nexo-Agent/code-review/actions/workflows/publish.yml)
-[![Backend](https://img.shields.io/badge/ghcr.io-nexo--coreview-2496ED?logo=docker&logoColor=white)](https://github.com/Nexo-Agent/code-review/pkgs/container/nexo-coreview)
-[![Agent](https://img.shields.io/badge/ghcr.io-nexo--coreview--agent-2496ED?logo=docker&logoColor=white)](https://github.com/Nexo-Agent/code-review/pkgs/container/nexo-coreview-agent)
+[![CI](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/ci.yml/badge.svg)](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/ci.yml)
+[![Publish](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/publish.yml/badge.svg)](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/publish.yml)
+[![Backend](https://img.shields.io/badge/ghcr.io-cogito--review-2496ED?logo=docker&logoColor=white)](https://github.com/CogitoForge-AI/cogito-review/pkgs/container/cogito-review)
+[![Agent](https://img.shields.io/badge/ghcr.io-cogito--review--agent-2496ED?logo=docker&logoColor=white)](https://github.com/CogitoForge-AI/cogito-review/pkgs/container/cogito-review-agent)
 
-Codename: `nexo-coreview`
+Codename: `cogito-review`
 
 AI-powered pull request reviews for GitHub. Connect a repository, point a webhook at this service, and get structured findings on every PR — powered by [OpenCode](https://opencode.ai/) and the LLM provider you choose.
 
@@ -17,7 +17,7 @@ AI-powered pull request reviews for GitHub. Connect a repository, point a webhoo
 - **Per-repo configuration** — Webhook secret, GitHub token, and optional LLM override for each repo (or a catch-all default)
 - **Ephemeral agent containers** — Each review spawns an OpenCode + MCP agent via Docker socket; no pre-provisioned agent pool
 - **Isolated git workspaces** — Repo clone and review run inside the per-review agent container
-- **MCP toolbase** — Agent can inspect git history and CI status through Nexo Co-Review MCP tools (`nexo-coreview`)
+- **MCP toolbase** — Agent can inspect git history and CI status through Cogito Review MCP tools (`cogito-review`)
 - **Self-hosted** — Single Docker image ships the API and web UI together
 
 ## Quick start
@@ -26,7 +26,7 @@ AI-powered pull request reviews for GitHub. Connect a repository, point a webhoo
 
 ```bash
 cp .env.example .env
-# Edit .env: set NEXO_COREVIEW_AGENT_CALLBACK_SECRET and pin image tags if needed
+# Edit .env: set COGITO_REVIEW_AGENT_CALLBACK_SECRET and pin image tags if needed
 docker compose -f docker-compose.yaml pull
 docker compose -f docker-compose.yaml up -d
 ```
@@ -40,15 +40,15 @@ Open the app (default port from `APP_PORT`, usually `8000`). Go to **Settings** 
 Published on every push to `main` and on version tags (`v*`):
 
 ```bash
-docker pull ghcr.io/nexo-agent/nexo-coreview:latest
-docker pull ghcr.io/nexo-agent/nexo-coreview-agent:latest
+docker pull ghcr.io/cogitoforge-ai/cogito-review:latest
+docker pull ghcr.io/cogitoforge-ai/cogito-review-agent:latest
 ```
 
 Set in `.env` for production (defaults in `.env.example`):
 
 ```bash
-NEXO_COREVIEW_IMAGE=ghcr.io/nexo-agent/nexo-coreview:latest
-NEXO_COREVIEW_AGENT_IMAGE=ghcr.io/nexo-agent/nexo-coreview-agent:latest
+COGITO_REVIEW_IMAGE=ghcr.io/cogitoforge-ai/cogito-review:latest
+COGITO_REVIEW_AGENT_IMAGE=ghcr.io/cogitoforge-ai/cogito-review-agent:latest
 ```
 
 Use a pinned digest or semver tag in production instead of `latest`.

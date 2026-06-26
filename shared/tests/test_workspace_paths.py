@@ -9,7 +9,10 @@ from coreview_shared.workspace.paths import (
 
 
 def test_safe_repo_slug_github() -> None:
-    assert safe_repo_slug("Nexo-Agent/Code-Review") == "nexo-agent__code-review"
+    assert (
+        safe_repo_slug("CogitoForge-AI/cogito-review")
+        == "cogitoforge-ai__cogito-review"
+    )
 
 
 def test_safe_repo_slug_ado() -> None:

@@ -4,8 +4,8 @@
 ARG VERSION=dev
 ARG BUILD_DATE
 ARG VCS_REF
-ARG IMAGE_AUTHORS="Nexo <ask@nkthanh.dev>"
-ARG IMAGE_TITLE="nexo-coreview"
+ARG IMAGE_AUTHORS="CogitoForge AI <ask@nkthanh.dev>"
+ARG IMAGE_TITLE="cogito-review"
 
 # --- Tool versions ---
 ARG NODE_VERSION=22-alpine
@@ -103,7 +103,7 @@ ARG IMAGE_AUTHORS
 ARG IMAGE_TITLE
 
 LABEL org.opencontainers.image.title="${IMAGE_TITLE}" \
-      org.opencontainers.image.description="Nexo Co-Review (nexo-coreview) — Python API with bundled Vite React SPA" \
+      org.opencontainers.image.description="Cogito Review (cogito-review) — Python API with bundled Vite React SPA" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.revision="${VCS_REF}" \

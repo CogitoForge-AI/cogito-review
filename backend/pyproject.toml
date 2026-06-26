@@ -1,7 +1,7 @@
 [project]
 name = "backend"
-version = "0.1.5"
-description = "Nexo Co-Review API (nexo-coreview)"
+version = "0.0.1"
+description = "Cogito Review API (cogito-review)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -22,7 +22,7 @@ dependencies = [
 coreview-shared = { workspace = true }
 
 [project.scripts]
-code-review = "app.cli:main"
+cogito-review = "app.cli:main"
 
 [dependency-groups]
 dev = [

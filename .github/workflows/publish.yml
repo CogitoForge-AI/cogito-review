@@ -34,9 +34,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: nexo-coreview
+          - image: cogito-review
             file: Dockerfile
-          - image: nexo-coreview-agent
+          - image: cogito-review-agent
             file: agent/Dockerfile
     steps:
       - uses: actions/checkout@v4

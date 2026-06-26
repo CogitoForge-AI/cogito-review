@@ -90,7 +90,7 @@ def get_docker_client(host: str | None = None) -> DockerClient:
         errors.append(f"default: {exc}")
 
     hints = [
-        "Set NEXO_COREVIEW_DOCKER_HOST or DOCKER_HOST:",
+        "Set COGITO_REVIEW_DOCKER_HOST or DOCKER_HOST:",
         "  Linux (native):       unix:///var/run/docker.sock",
         "  macOS Docker Desktop: unix:///var/run/docker.sock or unix://$HOME/.docker/run/docker.sock",
         "  Windows Docker:       npipe:////./pipe/docker_engine",

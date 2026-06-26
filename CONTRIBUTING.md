@@ -1,12 +1,12 @@
 # Contributing
 
-Thanks for helping improve Nexo Co-Review. This guide covers local development, configuration, and the conventions we follow.
+Thanks for helping improve Cogito Review. This guide covers local development, configuration, and the conventions we follow.
 
 ## Stack
 
 | Layer | Technology |
 |-------|------------|
-| Backend | Python 3.11+, FastAPI, asyncpg, Celery, Typer (`code-review` CLI) |
+| Backend | Python 3.11+, FastAPI, asyncpg, Celery, Typer (`cogito-review` CLI) |
 | Frontend | React 19, Vite, TanStack Router/Query/Table, shadcn/ui |
 | Database | PostgreSQL (dbmate migrations) |
 | Agent | [OpenCode](https://opencode.ai/) + MCP toolbase (Git/CI) |
@@ -64,14 +64,14 @@ Production uses only the base compose file; `docker-compose.override.yaml` is no
 | [`dev.Dockerfile`](dev.Dockerfile) | Multi-stage dev images (`target: api` / `target: web`) |
 | [`Dockerfile`](Dockerfile) | Production bundle (API + static SPA) |
 
-Docker dev stack services: `api`, `web`, `worker`, `redis`, `db`. `make dev` / `make dev-watch` build the agent image locally (`code-review-agent:dev`) first; the worker mounts `/var/run/docker.sock` and spawns a one-shot agent container per review via `docker run` when a PR arrives.
+Docker dev stack services: `api`, `web`, `worker`, `redis`, `db`. `make dev` / `make dev-watch` build the agent image locally (`cogito-review-agent:dev`) first; the worker mounts `/var/run/docker.sock` and spawns a one-shot agent container per review via `docker run` when a PR arrives.
 
 ## Review execution flow
 
 1. Webhook or retry enqueues `review.run` with a `review_id`.
 2. Celery worker calls `prepare_review_job` ([`backend/app/services/review_job_prepare.py`](backend/app/services/review_job_prepare.py)) to resolve repo integration + LLM provider and build the agent env dict.
-3. Docker runtime starts `coreview-agent review run --review-id <uuid>` with that env.
-4. Agent materializes OpenCode config from env, ensures a git worktree from the shared repo mirror, executes the review, and POSTs lifecycle events + findings to the callback URL (`NEXO_COREVIEW_CALLBACK_*`). The API persists them via `POST /api/v1/agent/review-events`.
+3. Docker runtime starts `cogito-review-agent review run --review-id <uuid>` with that env.
+4. Agent materializes OpenCode config from env, ensures a git worktree from the shared repo mirror, executes the review, and POSTs lifecycle events + findings to the callback URL (`COGITO_REVIEW_CALLBACK_*`). The API persists them via `POST /api/v1/agent/review-events`.
 
 **Workspace layout** (named volume `review_workspaces`, mounted at `/workspaces`):
 
@@ -81,7 +81,7 @@ Docker dev stack services: `api`, `web`, `worker`, `redis`, `db`. `make dev` / `
   worktrees/pr-<N>-<sha7>/        # per-review checkout (removed after review)
 ```
 
-Agent containers materialize ephemeral OpenCode config from `NEXO_COREVIEW_*` env at review time ([`agent/app/services/opencode_config.py`](agent/app/services/opencode_config.py)). Optional `opencode.generated.json` on the host is debug output from `make render-opencode-config` or API settings sync.
+Agent containers materialize ephemeral OpenCode config from `COGITO_REVIEW_*` env at review time ([`agent/app/services/opencode_config.py`](agent/app/services/opencode_config.py)). Optional `opencode.generated.json` on the host is debug output from `make render-opencode-config` or API settings sync.
 
 ## Environment variables
 
@@ -98,18 +98,18 @@ Copy [`.env.example`](.env.example) to `.env`. The Makefile, backend (`pydantic-
 | `APP_PORT` | Backend port (default `8000`) |
 | `WEB_PORT` | Frontend dev port (default `5173`) |
 
-### Infrastructure (`NEXO_COREVIEW_*`)
+### Infrastructure (`COGITO_REVIEW_*`)
 
 These are infrastructure-only. Repo credentials and LLM profiles are stored in Postgres (Settings UI).
 
 | Variable | Description |
 |----------|-------------|
-| `NEXO_COREVIEW_CELERY_BROKER_URL` | Redis broker URL |
-| `NEXO_COREVIEW_DOCKER_HOST` | Docker Engine URL; empty = auto-detect per platform |
-| `NEXO_COREVIEW_GIT_IMAGE` | Minimal git image (default `alpine/git:latest`) |
-| `NEXO_COREVIEW_AGENT_CALLBACK_URL` | URL agent containers POST review events to (Compose: `http://api:8000/api/v1/agent/review-events`) |
-| `NEXO_COREVIEW_AGENT_CALLBACK_SECRET` | Shared HMAC secret for callback auth |
-| `NEXO_COREVIEW_MCP_SERVER_URL` | MCP SSE URL (default `http://mcp-serve:8001/sse`) |
+| `COGITO_REVIEW_CELERY_BROKER_URL` | Redis broker URL |
+| `COGITO_REVIEW_DOCKER_HOST` | Docker Engine URL; empty = auto-detect per platform |
+| `COGITO_REVIEW_GIT_IMAGE` | Minimal git image (default `alpine/git:latest`) |
+| `COGITO_REVIEW_AGENT_CALLBACK_URL` | URL agent containers POST review events to (Compose: `http://api:8000/api/v1/agent/review-events`) |
+| `COGITO_REVIEW_AGENT_CALLBACK_SECRET` | Shared HMAC secret for callback auth |
+| `COGITO_REVIEW_MCP_SERVER_URL` | MCP SSE URL (default `http://mcp-serve:8001/sse`) |
 | `MCP_PORT` | Host port for MCP server (default `8001`) |
 
 GitHub tokens, webhook secrets, and LLM provider credentials are **not** infrastructure env vars — configure them in Postgres via **Settings** (`/settings`).
@@ -126,10 +126,10 @@ Saving LLM providers may regenerate `opencode.generated.json` on the API host fo
 ## CLI modes
 
 ```bash
-cd backend && uv run code-review backend run
-cd backend && uv run code-review job worker
-cd agent && uv run coreview-agent review run --review-id <uuid>
-cd agent && uv run coreview-agent serve --transport sse --host 0.0.0.0 --port 8001
+cd backend && uv run cogito-review backend run
+cd backend && uv run cogito-review job worker
+cd agent && uv run cogito-review-agent review run --review-id <uuid>
+cd agent && uv run cogito-review-agent serve --transport sse --host 0.0.0.0 --port 8001
 ```
 
 ## Project structure
@@ -152,7 +152,7 @@ agent/
     mcp/              # MCP server
     toolbase/         # MCP Git/CI tools
     providers/        # GitHub Git + CI adapters
-    cli/              # coreview-agent CLI
+    cli/              # cogito-review-agent CLI
   docker/             # entrypoint, opencode config
   Dockerfile
   tests/
@@ -249,7 +249,7 @@ cd backend && uv run pytest tests/api/test_reviews.py -k webhook
 
 ## Pull requests
 
-CI runs on every pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): lint, unit tests, integration tests (Postgres), and a Docker build smoke check. Merging to `main` triggers a publish workflow that pushes `ghcr.io/nexo-agent/nexo-coreview` and `ghcr.io/nexo-agent/nexo-coreview-agent` after CI passes. See [RELEASING.md](RELEASING.md) for the full Git flow and release process.
+CI runs on every pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): lint, unit tests, integration tests (Postgres), and a Docker build smoke check. Merging to `main` triggers a publish workflow that pushes `ghcr.io/cogitoforge-ai/cogito-review` and `ghcr.io/cogitoforge-ai/cogito-review-agent` after CI passes. See [RELEASING.md](RELEASING.md) for the full Git flow and release process.
 
 Before opening a PR:
 

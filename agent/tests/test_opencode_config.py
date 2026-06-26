@@ -74,10 +74,10 @@ def test_require_review_env_accepts_full_settings() -> None:
 
 
 def test_require_review_env_raises_when_missing_token() -> None:
-    with pytest.raises(ValueError, match="NEXO_COREVIEW_GITHUB_TOKEN"):
+    with pytest.raises(ValueError, match="COGITO_REVIEW_GITHUB_TOKEN"):
         require_review_env(_full_settings(github_token=""))
 
 
 def test_require_review_env_raises_when_missing_callback() -> None:
-    with pytest.raises(ValueError, match="NEXO_COREVIEW_CALLBACK_URL"):
+    with pytest.raises(ValueError, match="COGITO_REVIEW_CALLBACK_URL"):
         require_review_env(_full_settings(callback_url=""))

@@ -33,7 +33,7 @@ def parse_callback_metadata(raw: str) -> dict:
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        logger.warning("Invalid NEXO_COREVIEW_CALLBACK_METADATA JSON; using empty dict")
+        logger.warning("Invalid COGITO_REVIEW_CALLBACK_METADATA JSON; using empty dict")
         return {}
     return parsed if isinstance(parsed, dict) else {}
 
@@ -84,7 +84,7 @@ class ReviewCallbackClient:
         url: str,
         secret: str,
         metadata: dict | None = None,
-        agent_name: str = "coreview-agent",
+        agent_name: str = "cogito-review-agent",
         agent_version: str | None = None,
     ) -> None:
         self._url = url

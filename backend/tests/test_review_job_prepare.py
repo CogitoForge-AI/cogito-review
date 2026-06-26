@@ -88,22 +88,22 @@ def test_build_agent_environment_includes_review_and_credentials() -> None:
         infra=infra,
     )
 
-    assert env["NEXO_COREVIEW_REPO_FULL_NAME"] == "org/repo"
-    assert env["NEXO_COREVIEW_PR_NUMBER"] == "42"
-    assert env["NEXO_COREVIEW_HEAD_SHA"] == "abc123"
-    assert env["NEXO_COREVIEW_GITHUB_TOKEN"] == "ghp_test"
-    assert env["NEXO_COREVIEW_LLM_API_TOKEN"] == "sk-test"
-    assert env["NEXO_COREVIEW_OPENCODE_MODEL"] == "openai-compat/gpt-4o"
-    assert env["NEXO_COREVIEW_REVIEW_TIMEOUT_SECONDS"] == "900"
-    assert env["NEXO_COREVIEW_REVIEW_ID"] == str(review.id)
+    assert env["COGITO_REVIEW_REPO_FULL_NAME"] == "org/repo"
+    assert env["COGITO_REVIEW_PR_NUMBER"] == "42"
+    assert env["COGITO_REVIEW_HEAD_SHA"] == "abc123"
+    assert env["COGITO_REVIEW_GITHUB_TOKEN"] == "ghp_test"
+    assert env["COGITO_REVIEW_LLM_API_TOKEN"] == "sk-test"
+    assert env["COGITO_REVIEW_OPENCODE_MODEL"] == "openai-compat/gpt-4o"
+    assert env["COGITO_REVIEW_REVIEW_TIMEOUT_SECONDS"] == "900"
+    assert env["COGITO_REVIEW_REVIEW_ID"] == str(review.id)
     assert (
-        env["NEXO_COREVIEW_CALLBACK_URL"]
+        env["COGITO_REVIEW_CALLBACK_URL"]
         == "http://api:8000/api/v1/agent/review-events"
     )
-    assert env["NEXO_COREVIEW_CALLBACK_SECRET"] == "shared-secret"
+    assert env["COGITO_REVIEW_CALLBACK_SECRET"] == "shared-secret"
     assert "DATABASE_URL" not in env
 
-    metadata = json.loads(env["NEXO_COREVIEW_CALLBACK_METADATA"])
+    metadata = json.loads(env["COGITO_REVIEW_CALLBACK_METADATA"])
     assert metadata["delivery_id"] == "del-1"
     assert metadata["repo_integration_id"] == str(review.repo_integration_id)
 
@@ -129,10 +129,10 @@ def test_build_agent_environment_includes_ado_credentials() -> None:
         ),
     )
 
-    assert env["NEXO_COREVIEW_GIT_PROVIDER"] == "azure-devops"
-    assert env["NEXO_COREVIEW_ADO_ORGANIZATION"] == "fabrikam"
-    assert env["NEXO_COREVIEW_ADO_PROJECT"] == "MyProject"
-    assert env["NEXO_COREVIEW_ADO_PAT"] == "ado-pat"
+    assert env["COGITO_REVIEW_GIT_PROVIDER"] == "azure-devops"
+    assert env["COGITO_REVIEW_ADO_ORGANIZATION"] == "fabrikam"
+    assert env["COGITO_REVIEW_ADO_PROJECT"] == "MyProject"
+    assert env["COGITO_REVIEW_ADO_PAT"] == "ado-pat"
 
 
 def test_build_agent_environment_includes_custom_system_prompt() -> None:
@@ -147,7 +147,7 @@ def test_build_agent_environment_includes_custom_system_prompt() -> None:
         ),
     )
 
-    assert env["NEXO_COREVIEW_SYSTEM_PROMPT"] == "Focus on security only."
+    assert env["COGITO_REVIEW_SYSTEM_PROMPT"] == "Focus on security only."
 
 
 def test_build_agent_environment_omits_system_prompt_when_default() -> None:
@@ -163,7 +163,7 @@ def test_build_agent_environment_omits_system_prompt_when_default() -> None:
         ),
     )
 
-    assert "NEXO_COREVIEW_SYSTEM_PROMPT" not in env
+    assert "COGITO_REVIEW_SYSTEM_PROMPT" not in env
 
 
 def test_build_agent_environment_requires_callback_config() -> None:

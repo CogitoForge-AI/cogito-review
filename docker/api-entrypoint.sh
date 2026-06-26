@@ -3,7 +3,7 @@ set -e
 
 # Worker spawns agent containers via the mounted Docker socket (requires root).
 case "$1" in
-  code-review)
+  cogito-review)
     if [ "$2" = "job" ] && [ "$3" = "worker" ]; then
       exec "$@"
     fi

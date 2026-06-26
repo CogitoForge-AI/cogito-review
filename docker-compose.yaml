@@ -1,4 +1,4 @@
-# Nexo Co-Review stack — production uses GHCR images; dev merges docker-compose.override.yaml.
+# Cogito Review stack — production uses GHCR images; dev merges docker-compose.override.yaml.
 #
 # Runtime: api, worker, db, redis (+ one-shot migrate).
 # Agent review containers are spawned on demand by the worker.
@@ -15,14 +15,14 @@ networks:
     name: coreview
 
 x-coreview-image: &coreview-image
-  image: ${NEXO_COREVIEW_IMAGE:-ghcr.io/nexo-agent/nexo-coreview:latest}
+  image: ${COGITO_REVIEW_IMAGE:-ghcr.io/cogitoforge-ai/cogito-review:latest}
   pull_policy: missing
 
 x-api-environment: &api-environment
   DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-app}?sslmode=disable
-  NEXO_COREVIEW_CELERY_BROKER_URL: redis://redis:6379/0
-  NEXO_COREVIEW_AGENT_CALLBACK_URL: http://api:8000/api/v1/agent/review-events
-  NEXO_COREVIEW_AGENT_CALLBACK_SECRET: ${NEXO_COREVIEW_AGENT_CALLBACK_SECRET:-dev-callback-secret}
+  COGITO_REVIEW_CELERY_BROKER_URL: redis://redis:6379/0
+  COGITO_REVIEW_AGENT_CALLBACK_URL: http://api:8000/api/v1/agent/review-events
+  COGITO_REVIEW_AGENT_CALLBACK_SECRET: ${COGITO_REVIEW_AGENT_CALLBACK_SECRET:-dev-callback-secret}
   DB_POOL_MIN_SIZE: 1
   DB_POOL_MAX_SIZE: 4
 
@@ -71,15 +71,15 @@ services:
 
   worker:
     <<: *coreview-image
-    command: ["code-review", "job", "worker", "--concurrency", "1"]
+    command: ["cogito-review", "job", "worker", "--concurrency", "1"]
     environment:
       <<: *api-environment
-      NEXO_COREVIEW_WORKSPACE_ROOT: /workspaces
-      NEXO_COREVIEW_DOCKER_HOST: unix:///var/run/docker.sock
-      NEXO_COREVIEW_AGENT_IMAGE: ${NEXO_COREVIEW_AGENT_IMAGE:-ghcr.io/nexo-agent/nexo-coreview-agent:latest}
-      NEXO_COREVIEW_AGENT_NETWORK: coreview
-      NEXO_COREVIEW_AGENT_MEM_LIMIT: ${NEXO_COREVIEW_AGENT_MEM_LIMIT:-1g}
-      NEXO_COREVIEW_AGENT_CPUS: ${NEXO_COREVIEW_AGENT_CPUS:-1.0}
+      COGITO_REVIEW_WORKSPACE_ROOT: /workspaces
+      COGITO_REVIEW_DOCKER_HOST: unix:///var/run/docker.sock
+      COGITO_REVIEW_AGENT_IMAGE: ${COGITO_REVIEW_AGENT_IMAGE:-ghcr.io/cogitoforge-ai/cogito-review-agent:latest}
+      COGITO_REVIEW_AGENT_NETWORK: coreview
+      COGITO_REVIEW_AGENT_MEM_LIMIT: ${COGITO_REVIEW_AGENT_MEM_LIMIT:-1g}
+      COGITO_REVIEW_AGENT_CPUS: ${COGITO_REVIEW_AGENT_CPUS:-1.0}
     deploy:
       resources:
         limits:

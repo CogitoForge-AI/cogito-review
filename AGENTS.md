@@ -4,10 +4,10 @@ Instructions for AI coding agents working on this repository.
 
 ## Project overview
 
-Monorepo for an LLM-powered code review pilot (**Nexo Co-Review**, codename `nexo-coreview`):
+Monorepo for an LLM-powered code review pilot (**Cogito Review**, codename `cogito-review`):
 
-- **Agent** — Python 3.11+, MCP server (`coreview-agent`), OpenCode runtime image
-- **Backend** — Python 3.11+, FastAPI, asyncpg, Celery, Typer CLI (`code-review`)
+- **Agent** — Python 3.11+, MCP server (`cogito-review-agent`), OpenCode runtime image
+- **Backend** — Python 3.11+, FastAPI, asyncpg, Celery, Typer CLI (`cogito-review`)
 - **Frontend** — React 19, Vite, TanStack Router/Query/Table, shadcn/ui (New York)
 - **Database** — PostgreSQL (dbmate migrations)
 - **Agent runtime** — [OpenCode](https://opencode.ai/) + MCP toolbase (Git/CI tools)
@@ -19,21 +19,21 @@ Production ships as a single Docker image (API + bundled SPA). Architecture diag
 Three layers with clear boundaries:
 
 1. **Backend (API)** — Configuration management, webhooks, frontend API. Stores repo integrations and LLM providers in Postgres.
-2. **Job (Celery worker)** — Reads review + integration config from DB, builds a full `NEXO_COREVIEW_*` env dict, spawns a one-shot agent container via the Docker runtime provider.
+2. **Job (Celery worker)** — Reads review + integration config from DB, builds a full `COGITO_REVIEW_*` env dict, spawns a one-shot agent container via the Docker runtime provider.
 3. **Agent (stateless container)** — Receives all execution config via env (materializes ephemeral `opencode.json` locally). Uses a persistent repo mirror + per-PR git worktree under `/workspaces`, runs LLM review, posts to GitHub. Reports progress and findings via **HTTP callback** (schema v1, HMAC-signed); it does **not** connect to Postgres.
 
 The agent does **not** read `repo_integrations` or `llm_providers` from the database.
 
 ### Review callback (schema v1)
 
-Agent posts `review.started`, `review.completed`, and `review.failed` events to `NEXO_COREVIEW_CALLBACK_URL` with `X-Review-Signature-256` HMAC auth. Spec: [`shared/coreview_shared/schemas/review-callback-v1.schema.json`](shared/coreview_shared/schemas/review-callback-v1.schema.json) (Pydantic models in `review_callback.py`). Nexo backend receives them at `POST /api/v1/agent/review-events` and persists to Postgres. Third-party orchestrators can implement the same contract without Nexo schema.
+Agent posts `review.started`, `review.completed`, and `review.failed` events to `COGITO_REVIEW_CALLBACK_URL` with `X-Review-Signature-256` HMAC auth. Spec: [`shared/coreview_shared/schemas/review-callback-v1.schema.json`](shared/coreview_shared/schemas/review-callback-v1.schema.json) (Pydantic models in `review_callback.py`). The Cogito Review backend receives them at `POST /api/v1/agent/review-events` and persists to Postgres. Third-party orchestrators can implement the same callback contract without the Cogito Review database schema.
 
 ### CLI modes
 
 ```bash
-cd backend && uv run code-review backend run   # FastAPI server
-cd backend && uv run code-review job worker    # Celery worker (prepare env + spawn agent)
-cd agent && uv run coreview-agent review run --review-id <uuid>  # one-shot review (env injected by job)
+cd backend && uv run cogito-review backend run   # FastAPI server
+cd backend && uv run cogito-review job worker    # Celery worker (prepare env + spawn agent)
+cd agent && uv run cogito-review-agent review run --review-id <uuid>  # one-shot review (env injected by job)
 ```
 
 ### Provider abstractions
@@ -86,7 +86,7 @@ On Docker Desktop (macOS/Windows), set `CHOKIDAR_USEPOLLING=true` in `.env` if H
 ## Dev environment tips
 
 - Root `.env` is loaded by Makefile, backend (`pydantic-settings`), and Compose.
-- **Infrastructure env vars** use prefix `NEXO_COREVIEW_*` (Redis, Docker, OpenCode, MCP). See `.env.example`.
+- **Infrastructure env vars** use prefix `COGITO_REVIEW_*` (Redis, Docker, OpenCode, MCP). See `.env.example`.
 - **Dynamic settings** (repos, webhook secrets, GitHub tokens, LLM providers) are stored in Postgres and edited at `/settings` — do not hardcode secrets.
 - After changing API routes or Pydantic schemas, run `make openapi` to refresh `openapi.json` and `frontend/src/api/generated/schema.ts`.
 - After adding LLM providers via Settings, each new review spawns a fresh agent container with the latest config injected via env.
@@ -116,7 +116,7 @@ agent/
     toolbase/         # Git/CI MCP tool handlers
     providers/        # factory wiring from env
     repositories/     # repo_integrations (per-repo credentials)
-    cli/              # coreview-agent Typer CLI
+    cli/              # cogito-review-agent Typer CLI
   docker/             # entrypoint + default opencode config
   Dockerfile          # OpenCode + MCP + git image
   tests/
@@ -147,7 +147,7 @@ frontend/
 - Use `uv run` for all Python commands inside `backend/`
 - Repositories return frozen `@dataclass` rows; services orchestrate logic
 - Async throughout: asyncpg, httpx, FastAPI `async def` handlers
-- Config via `app.config.Settings` and `CodeReviewSettings` (`NEXO_COREVIEW_` prefix)
+- Config via `app.config.Settings` and `CodeReviewSettings` (`COGITO_REVIEW_` prefix)
 - Import order enforced by Ruff (`I`)
 
 ### TypeScript (frontend)
@@ -189,7 +189,7 @@ Add or update tests for behavior you change. API tests use `httpx.AsyncClient` w
 
 - Treat Server Actions / public API routes as untrusted: validate input, authenticate webhooks (GitHub HMAC)
 - Webhook endpoint: `POST /api/v1/webhooks/github`
-- Never log or commit `NEXO_COREVIEW_*` tokens, webhook secrets, or GitHub PATs
+- Never log or commit `COGITO_REVIEW_*` tokens, webhook secrets, or GitHub PATs
 - Worker mounts Docker socket for isolated git workspaces — keep runtime images minimal (`alpine/git`)
 - Dynamic credentials belong in Postgres (Settings UI), not in source code
 

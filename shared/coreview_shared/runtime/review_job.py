@@ -53,7 +53,7 @@ def build_docker_review_job_spec(
         job_id=review_id,
         image=agent_image,
         command=[
-            "coreview-agent",
+            "cogito-review-agent",
             "review",
             "run",
             "--review-id",
@@ -81,7 +81,7 @@ def build_k8s_review_job_spec(
         job_id=review_id,
         image=agent_image,
         command=[
-            "coreview-agent",
+            "cogito-review-agent",
             "review",
             "run",
             "--review-id",

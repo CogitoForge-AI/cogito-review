@@ -1,6 +1,6 @@
-# Nexo Co-Review
+# Cogito Review
 
-Codename: `nexo-coreview`
+Codename: `cogito-review`
 
 AI-powered pull request reviews for GitHub. Connect a repository, point a webhook at this service, and get structured findings on every PR — powered by [OpenCode](https://opencode.ai/) and the LLM provider you choose.
 
@@ -12,7 +12,7 @@ AI-powered pull request reviews for GitHub. Connect a repository, point a webhoo
 - **Per-repo configuration** — Webhook secret, GitHub token, and optional LLM override for each repo (or a catch-all default)
 - **Ephemeral agent containers** — Each review spawns an OpenCode + MCP agent via Docker socket; no pre-provisioned agent pool
 - **Isolated git workspaces** — Repo clone and review run inside the per-review agent container
-- **MCP toolbase** — Agent can inspect git history and CI status through Nexo Co-Review MCP tools (`nexo-coreview`)
+- **MCP toolbase** — Agent can inspect git history and CI status through Cogito Review MCP tools (`cogito-review`)
 - **Self-hosted** — Single Docker image ships the API and web UI together
 
 ## Quick start

@@ -1,4 +1,4 @@
-"""Nexo Co-Review MCP server (nexo-coreview) exposing Git and CI tools."""
+"""Cogito Review MCP server (cogito-review) exposing Git and CI tools."""
 
 from __future__ import annotations
 

@@ -3,8 +3,8 @@ import typer
 from app.cli import backend, config_cmd, job
 
 app = typer.Typer(
-    name="code-review",
-    help="Nexo Co-Review (nexo-coreview) — backend API and Celery worker.",
+    name="cogito-review",
+    help="Cogito Review (cogito-review) — backend API and Celery worker.",
     no_args_is_help=True,
 )
 
