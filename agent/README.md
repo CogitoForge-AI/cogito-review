@@ -59,7 +59,7 @@ uv run cogito-review-agent review run --review-id <uuid>
 
 Docker image (OpenCode + MCP + git):
 
-Built automatically on `make dev` / `make prod-up`, or manually:
+Built automatically on `make dev` / `make prod`, or manually:
 
 ```bash
 make build-agent   # docker build -f agent/Dockerfile -t cogito-review-agent:dev .

@@ -4,8 +4,8 @@
 # port exposure, persistent storage, resource sizing, and Docker socket access.
 
 networks:
-  coreview:
-    name: coreview
+  cogito-review:
+    name: cogito-review
 
 x-coreview-image: &coreview-image
   image: ${COGITO_REVIEW_IMAGE:-ghcr.io/cogitoforge-ai/cogito-review:latest}
@@ -52,7 +52,7 @@ services:
         reservations:
           memory: 128M
     networks:
-      - coreview
+      - cogito-review
     depends_on:
       db:
         condition: service_healthy
@@ -70,7 +70,7 @@ services:
       COGITO_REVIEW_WORKSPACE_ROOT: /workspaces
       COGITO_REVIEW_DOCKER_HOST: unix:///var/run/docker.sock
       COGITO_REVIEW_AGENT_IMAGE: ${COGITO_REVIEW_AGENT_IMAGE:-ghcr.io/cogitoforge-ai/cogito-review-agent:latest}
-      COGITO_REVIEW_AGENT_NETWORK: coreview
+      COGITO_REVIEW_AGENT_NETWORK: cogito-review
       COGITO_REVIEW_AGENT_MEM_LIMIT: ${COGITO_REVIEW_AGENT_MEM_LIMIT:-1g}
       COGITO_REVIEW_AGENT_CPUS: ${COGITO_REVIEW_AGENT_CPUS:-1.0}
     deploy:
@@ -84,7 +84,7 @@ services:
       - review_workspaces:/workspaces
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - coreview
+      - cogito-review
     depends_on:
       db:
         condition: service_healthy
@@ -101,7 +101,7 @@ services:
     command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
     <<: *redis-resources
     networks:
-      - coreview
+      - cogito-review
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -120,7 +120,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - coreview
+      - cogito-review
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-app}"]
       interval: 5s
@@ -129,31 +129,35 @@ services:
     restart: unless-stopped
 
   migrate:
-    <<: *coreview-image
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
     restart: "no"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-app}?sslmode=disable
     networks:
-      - coreview
+      - cogito-review
     depends_on:
       db:
         condition: service_healthy
-    entrypoint: ["dbmate"]
-    command: ["-d", "/app/migrations", "--wait", "up"]
+    command: ["dbmate", "-d", "/app/migrations", "--wait", "up"]
 
   migrate-down:
     profiles: [tools]
-    <<: *coreview-image
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
     restart: "no"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-app}?sslmode=disable
     networks:
-      - coreview
+      - cogito-review
     depends_on:
       db:
         condition: service_healthy
-    entrypoint: ["dbmate"]
-    command: ["-d", "/app/migrations", "down"]
+    command: ["dbmate", "-d", "/app/migrations", "down"]
 
 volumes:
   postgres_data:
