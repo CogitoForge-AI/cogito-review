@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -84,7 +84,13 @@ function LlmProvidersPage() {
               providerList.map((provider) => (
                 <TableRow key={provider.id}>
                   <TableCell>
-                    <span className="font-medium">{provider.name}</span>
+                    <Link
+                      to="/llm-providers/$providerId"
+                      params={{ providerId: provider.id }}
+                      className="font-medium hover:underline"
+                    >
+                      {provider.name}
+                    </Link>
                     <p className="text-muted-foreground text-xs">
                       {provider.provider_id}
                     </p>
