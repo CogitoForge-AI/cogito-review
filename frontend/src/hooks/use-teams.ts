@@ -2,9 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { api } from "@/api/client"
 import type {
-  Project,
-  ProjectCreate,
-  ProjectUpdate,
   Team,
   TeamCreate,
   TeamMember,
@@ -100,16 +97,6 @@ export function useOrgRepositoriesOptions() {
   })
 }
 
-export function useProjects(teamId: string) {
-  return usePaginatedList<Project>({
-    queryKey: ["teams", teamId, "projects", "options"],
-    path: `/teams/${teamId}/projects`,
-    page: 1,
-    pageSize: OPTIONS_PAGE_SIZE,
-    enabled: Boolean(teamId),
-  })
-}
-
 export function useCreateTeam() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -144,47 +131,6 @@ export function useDeleteTeam(teamId: string) {
     mutationFn: () => api<void>(`/teams/${teamId}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teams"] })
-    },
-  })
-}
-
-export function useProject(teamId: string, projectId: string) {
-  return useQuery({
-    queryKey: ["teams", teamId, "projects", projectId],
-    queryFn: () => api<Project>(`/teams/${teamId}/projects/${projectId}`),
-    enabled: Boolean(teamId) && Boolean(projectId),
-  })
-}
-
-export function useCreateProject(teamId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (payload: ProjectCreate) =>
-      api<Project>(`/teams/${teamId}/projects`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "projects"] })
-      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repositories"] })
-      queryClient.invalidateQueries({ queryKey: ["teams"] })
-    },
-  })
-}
-
-export function useUpdateProject(teamId: string, projectId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (payload: ProjectUpdate) =>
-      api<Project>(`/teams/${teamId}/projects/${projectId}`, {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "projects"] })
-      queryClient.invalidateQueries({
-        queryKey: ["teams", teamId, "projects", projectId],
-      })
     },
   })
 }

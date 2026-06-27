@@ -33,7 +33,6 @@ class ReviewResponse(BaseModel):
     delivery_id: str | None
     repo_integration_id: UUID | None = None
     team_id: UUID
-    project_id: UUID
     error_message: str | None
     started_at: datetime | None
     completed_at: datetime | None

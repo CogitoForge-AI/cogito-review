@@ -24,13 +24,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useProjectRepo } from "@/hooks/use-settings"
+import { useTeamRepo } from "@/hooks/use-settings"
 import { useReviews } from "@/hooks/use-reviews"
 import { cn } from "@/lib/utils"
 
-export const Route = createFileRoute(
-  "/teams/$teamId/projects/$projectId/repos/$repoId",
-)({
+export const Route = createFileRoute("/teams/$teamId/repos/$repoId")({
   component: RepositoryDetailPage,
 })
 
@@ -41,9 +39,9 @@ function lastRunAt(review: Review): string {
 }
 
 function RepositoryDetailPage() {
-  const { teamId, projectId, repoId } = Route.useParams()
+  const { teamId, repoId } = Route.useParams()
   const navigate = useNavigate()
-  const repoQuery = useProjectRepo(teamId, projectId, repoId)
+  const repoQuery = useTeamRepo(teamId, repoId)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsSession, setSettingsSession] = useState(0)
 
@@ -152,24 +150,19 @@ function RepositoryDetailPage() {
         ) : null
       }
     >
-      <BackLink
-        to="/teams/$teamId/projects/$projectId"
-        params={{ teamId, projectId }}
-        label="Project"
-      />
+      <BackLink to="/teams/$teamId" params={{ teamId }} label="Team" />
 
       {repo ? (
         <RepoIntegrationDialog
           teamId={teamId}
-          projectId={projectId}
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           repo={repo}
           sessionKey={settingsSession}
           onDeleted={() =>
             navigate({
-              to: "/teams/$teamId/projects/$projectId",
-              params: { teamId, projectId },
+              to: "/teams/$teamId",
+              params: { teamId },
             })
           }
         />

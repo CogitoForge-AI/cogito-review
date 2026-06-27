@@ -85,7 +85,7 @@ function RepositorySearchInput({
     <Input
       value={searchInput}
       onChange={(event) => setSearchInput(event.target.value)}
-      placeholder="Search repositories, teams, projects…"
+      placeholder="Search repositories or teams…"
       className="max-w-md"
     />
   )
@@ -216,7 +216,6 @@ function RepositoriesPage() {
               <TableRow>
                 <TableHead>Repository</TableHead>
                 <TableHead>Team</TableHead>
-                <TableHead>Project</TableHead>
                 <TableHead>LLM</TableHead>
                 <TableHead className="w-20 text-right">Enabled</TableHead>
               </TableRow>
@@ -227,10 +226,9 @@ function RepositoriesPage() {
                   <TableRow key={repo.id}>
                     <TableCell>
                       <Link
-                        to="/teams/$teamId/projects/$projectId/repos/$repoId"
+                        to="/teams/$teamId/repos/$repoId"
                         params={{
                           teamId: repo.team_id,
-                          projectId: repo.project_id,
                           repoId: repo.id,
                         }}
                         className="font-medium hover:underline"
@@ -247,18 +245,6 @@ function RepositoriesPage() {
                         {repo.team_name}
                       </Link>
                     </TableCell>
-                    <TableCell>
-                      <Link
-                        to="/teams/$teamId/projects/$projectId"
-                        params={{
-                          teamId: repo.team_id,
-                          projectId: repo.project_id,
-                        }}
-                        className="text-muted-foreground hover:underline"
-                      >
-                        {repo.project_name}
-                      </Link>
-                    </TableCell>
                     <TableCell>{repo.llm_provider_name ?? "Org default"}</TableCell>
                     <TableCell className="text-right">
                       <Switch checked={repo.enabled} disabled />
@@ -266,7 +252,7 @@ function RepositoriesPage() {
                   </TableRow>
                 ))
               ) : (
-                <EmptyState colSpan={5}>
+                <EmptyState colSpan={4}>
                   {hasFilters
                     ? "No repositories match your search or filters."
                     : "No repositories in your accessible teams yet."}

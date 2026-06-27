@@ -189,10 +189,8 @@ function ReviewsPage() {
     [],
   )
 
-  const reviewList = reviews.data?.items ?? []
-
   const table = useReactTable({
-    data: reviewList,
+    data: reviews.data?.items ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   })
@@ -263,7 +261,7 @@ function ReviewsPage() {
         page={page}
         onPageChange={goToPage}
       >
-        {() => (
+        {(reviewList) => (
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -282,7 +280,7 @@ function ReviewsPage() {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.length ? (
+              {reviewList.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (

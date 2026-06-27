@@ -5,7 +5,6 @@ import { useState } from "react"
 import { AppShell } from "@/components/layout/AppShell"
 import { EmptyState } from "@/components/patterns/empty-state"
 import { PaginatedListPanel } from "@/components/patterns/paginated-list-panel"
-import { ProjectCreateDialog } from "@/components/teams/ProjectCreateDialog"
 import { TeamMemberAddDialog } from "@/components/teams/TeamMemberAddDialog"
 import { TeamRepositoryAddDialog } from "@/components/teams/TeamRepositoryAddDialog"
 import { TeamSettingsDialog } from "@/components/teams/TeamSettingsDialog"
@@ -39,8 +38,6 @@ function TeamDetailPage() {
   const [memberPage, setMemberPage] = useState(1)
   const repositories = useTeamRepositoriesPage(teamId, { page: repoPage })
   const members = useTeamMembersPage(teamId, { page: memberPage })
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false)
-  const [projectDialogSession, setProjectDialogSession] = useState(0)
   const [repositoryDialogOpen, setRepositoryDialogOpen] = useState(false)
   const [repositoryDialogSession, setRepositoryDialogSession] = useState(0)
   const [memberDialogOpen, setMemberDialogOpen] = useState(false)
@@ -50,11 +47,6 @@ function TeamDetailPage() {
 
   const isOrgAdmin = me.data?.user.is_org_admin ?? false
   const team = teams.data?.items.find((row) => row.id === teamId)
-
-  function openProjectDialog() {
-    setProjectDialogSession((session) => session + 1)
-    setProjectDialogOpen(true)
-  }
 
   function openRepositoryDialog() {
     setRepositoryDialogSession((session) => session + 1)
@@ -116,19 +108,12 @@ function TeamDetailPage() {
           ) : null}
         </div>
 
-        <ProjectCreateDialog
-          teamId={teamId}
-          open={projectDialogOpen}
-          onOpenChange={setProjectDialogOpen}
-          sessionKey={projectDialogSession}
-        />
         {isOrgAdmin ? (
           <TeamRepositoryAddDialog
             teamId={teamId}
             open={repositoryDialogOpen}
             onOpenChange={setRepositoryDialogOpen}
             sessionKey={repositoryDialogSession}
-            onCreateProject={openProjectDialog}
           />
         ) : null}
 
@@ -143,7 +128,6 @@ function TeamDetailPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Repository</TableHead>
-                    <TableHead>Project</TableHead>
                     <TableHead>LLM</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -153,10 +137,9 @@ function TeamDetailPage() {
                       <TableRow key={repo.id}>
                         <TableCell>
                           <Link
-                            to="/teams/$teamId/projects/$projectId/repos/$repoId"
+                            to="/teams/$teamId/repos/$repoId"
                             params={{
                               teamId,
-                              projectId: repo.project_id,
                               repoId: repo.id,
                             }}
                             className="font-medium hover:underline"
@@ -165,23 +148,14 @@ function TeamDetailPage() {
                           </Link>
                         </TableCell>
                         <TableCell>
-                          <Link
-                            to="/teams/$teamId/projects/$projectId"
-                            params={{ teamId, projectId: repo.project_id }}
-                            className="text-muted-foreground hover:underline"
-                          >
-                            {repo.project_name}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
                           {repo.llm_provider_name ?? "Org default"}
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
-                    <EmptyState colSpan={3}>
+                    <EmptyState colSpan={2}>
                       {isOrgAdmin
-                        ? 'No repositories yet. Create a project, then add repositories from the project page.'
+                        ? 'No repositories yet. Click "Add repository" to connect one.'
                         : "No repositories in this team yet."}
                     </EmptyState>
                   )}

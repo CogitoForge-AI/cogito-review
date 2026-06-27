@@ -6,36 +6,38 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.api.pagination import PaginationParams
 from app.auth.dependencies import require_team_member
 from app.dependencies import get_conn
-from app.schemas.project import (
-    ProjectCreate,
-    ProjectListResponse,
-    ProjectResponse,
-    ProjectUpdate,
+from app.schemas.repo_integration import (
+    RepoIntegrationCreate,
+    RepoIntegrationListResponse,
+    RepoIntegrationResponse,
+    RepoIntegrationUpdate,
 )
-from app.services.projects import (
-    create_project,
-    delete_project,
-    get_project,
-    list_projects_paginated,
-    update_project,
+from app.services.repo_integrations import (
+    create_repo_integration,
+    delete_repo_integration,
+    get_repo_integration,
+    list_repo_integrations_for_team_paginated,
+    update_repo_integration,
 )
 
 router = APIRouter()
 
 
-@router.get("", response_model=ProjectListResponse)
-async def get_projects(
+@router.get("", response_model=RepoIntegrationListResponse)
+async def get_repos(
     team_id: UUID,
     q: str | None = Query(None, max_length=200),
+    enabled: bool | None = Query(None),
     pagination: PaginationParams = Depends(),
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
-) -> ProjectListResponse:
+) -> RepoIntegrationListResponse:
     try:
-        return await list_projects_paginated(
+        return await list_repo_integrations_for_team_paginated(
             conn,
             team_id,
             search=q,
+            enabled=enabled,
             limit=pagination.limit,
             offset=pagination.offset,
         )
@@ -43,66 +45,70 @@ async def get_projects(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
-@router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
-async def post_project(
+@router.post(
+    "",
+    response_model=RepoIntegrationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def post_repo(
     team_id: UUID,
-    payload: ProjectCreate,
+    payload: RepoIntegrationCreate,
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
-) -> ProjectResponse:
+) -> RepoIntegrationResponse:
     try:
-        return await create_project(conn, team_id, payload)
+        return await create_repo_integration(conn, team_id, payload)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
-@router.get("/{project_id}", response_model=ProjectResponse)
-async def get_project_route(
+@router.get("/{integration_id}", response_model=RepoIntegrationResponse)
+async def get_repo(
     team_id: UUID,
-    project_id: UUID,
+    integration_id: UUID,
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
-) -> ProjectResponse:
+) -> RepoIntegrationResponse:
     try:
-        project = await get_project(conn, project_id)
+        row = await get_repo_integration(conn, integration_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    if project.team_id != team_id:
+    if row.team_id != team_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    return project
+    return row
 
 
-@router.put("/{project_id}", response_model=ProjectResponse)
-async def put_project(
+@router.put("/{integration_id}", response_model=RepoIntegrationResponse)
+async def put_repo(
     team_id: UUID,
-    project_id: UUID,
-    payload: ProjectUpdate,
+    integration_id: UUID,
+    payload: RepoIntegrationUpdate,
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
-) -> ProjectResponse:
+) -> RepoIntegrationResponse:
     try:
-        project = await get_project(conn, project_id)
+        row = await get_repo_integration(conn, integration_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    if project.team_id != team_id:
+    if row.team_id != team_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     try:
-        return await update_project(conn, project_id, payload)
+        return await update_repo_integration(conn, integration_id, payload)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
-@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project_route(
+@router.delete("/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_repo(
     team_id: UUID,
-    project_id: UUID,
+    integration_id: UUID,
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
 ) -> None:
     try:
-        project = await get_project(conn, project_id)
+        row = await get_repo_integration(conn, integration_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    if project.team_id != team_id:
+    if row.team_id != team_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    await delete_project(conn, project_id)
+    await delete_repo_integration(conn, integration_id)

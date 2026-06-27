@@ -71,9 +71,7 @@ class TeamRepository:
             idx += 1
         if search:
             pattern = f"%{search}%"
-            clauses.append(
-                f"(t.name ILIKE ${idx} OR t.slug ILIKE ${idx})"
-            )
+            clauses.append(f"(t.name ILIKE ${idx} OR t.slug ILIKE ${idx})")
             args.append(pattern)
             idx += 1
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
@@ -113,9 +111,7 @@ class TeamRepository:
             idx += 1
         if search:
             pattern = f"%{search}%"
-            clauses.append(
-                f"(t.name ILIKE ${idx} OR t.slug ILIKE ${idx})"
-            )
+            clauses.append(f"(t.name ILIKE ${idx} OR t.slug ILIKE ${idx})")
             args.append(pattern)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         if user_id is not None:
@@ -192,11 +188,10 @@ class TeamRepository:
             return {}
         rows = await self._conn.fetch(
             """
-            SELECT p.team_id, COUNT(ri.id)::int AS repo_count
+            SELECT ri.team_id, COUNT(ri.id)::int AS repo_count
             FROM repo_integrations ri
-            JOIN projects p ON p.id = ri.project_id
-            WHERE p.team_id = ANY($1::uuid[])
-            GROUP BY p.team_id
+            WHERE ri.team_id = ANY($1::uuid[])
+            GROUP BY ri.team_id
             """,
             team_ids,
         )

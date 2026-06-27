@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.api.pagination import PaginationParams
 from app.auth.dependencies import get_current_user, require_org_admin_user
 from app.dependencies import get_conn
-from app.schemas.repo_integration import TeamRepositoryListResponse
+from app.schemas.repo_integration import RepoIntegrationListResponse
 from app.schemas.team import (
     TeamCreate,
     TeamListResponse,
@@ -47,14 +47,14 @@ async def get_teams(
     )
 
 
-@router.get("/{team_id}/repositories", response_model=TeamRepositoryListResponse)
+@router.get("/{team_id}/repositories", response_model=RepoIntegrationListResponse)
 async def get_team_repositories(
     team_id: UUID,
     q: str | None = Query(None, max_length=200),
     pagination: PaginationParams = Depends(),
     conn: asyncpg.Connection = Depends(get_conn),
     user=Depends(get_current_user),
-) -> TeamRepositoryListResponse:
+) -> RepoIntegrationListResponse:
     try:
         await require_team_access(conn, user, team_id)
     except AccessDeniedError:
@@ -64,6 +64,7 @@ async def get_team_repositories(
             conn,
             team_id,
             search=q,
+            enabled=None,
             limit=pagination.limit,
             offset=pagination.offset,
         )

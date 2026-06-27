@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.api.pagination import PaginationParams
 from app.auth.dependencies import AuthContext, get_auth_context
 from app.dependencies import get_conn
-from app.repositories.projects import ProjectRepository
 from app.repositories.repo_integrations import RepoIntegrationRepository
 from app.schemas.repo_integration import (
     RepoIntegrationListResponse,
@@ -30,7 +29,7 @@ async def get_repo_integrations_legacy(
     conn: asyncpg.Connection = Depends(get_conn),
     auth: AuthContext = Depends(get_auth_context),
 ) -> RepoIntegrationListResponse:
-    """Legacy flat list — returns repos in projects under accessible teams."""
+    """Legacy flat list — returns repos in accessible teams."""
     if not auth.accessible_team_ids:
         return RepoIntegrationListResponse(items=[], total=0)
     org_result = await list_repo_integrations_for_teams_paginated(
@@ -55,7 +54,6 @@ async def get_repo_integration_legacy(
     row = await RepoIntegrationRepository(conn).get(integration_id)
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    project = await ProjectRepository(conn).get(row.project_id)
-    if project is None or project.team_id not in auth.accessible_team_ids:
+    if row.team_id not in auth.accessible_team_ids:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     return await to_repo_integration_response(conn, row)

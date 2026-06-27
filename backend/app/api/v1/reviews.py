@@ -57,7 +57,6 @@ def _to_review_response(
         delivery_id=row.delivery_id,
         repo_integration_id=row.repo_integration_id,
         team_id=row.team_id,
-        project_id=row.project_id,
         error_message=row.error_message,
         started_at=row.started_at,
         completed_at=row.completed_at,

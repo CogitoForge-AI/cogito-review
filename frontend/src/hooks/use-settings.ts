@@ -77,35 +77,29 @@ export function useDeleteLlmProvider() {
   })
 }
 
-function reposPath(teamId: string, projectId: string) {
-  return `/teams/${teamId}/projects/${projectId}/repos`
+function reposPath(teamId: string) {
+  return `/teams/${teamId}/repos`
 }
 
-export function useProjectReposPage(
+export function useTeamReposPage(
   teamId: string,
-  projectId: string,
   params: { page: number; q?: string },
 ) {
   const query = params.q?.trim() ?? ""
   return usePaginatedList<RepoIntegration>({
-    queryKey: ["teams", teamId, "projects", projectId, "repos", query],
-    path: reposPath(teamId, projectId),
+    queryKey: ["teams", teamId, "repos", query],
+    path: reposPath(teamId),
     page: params.page,
     filters: query ? { q: query } : undefined,
-    enabled: Boolean(teamId) && Boolean(projectId),
+    enabled: Boolean(teamId),
   })
 }
 
-export function useProjectRepo(
-  teamId: string,
-  projectId: string,
-  repoId: string,
-) {
+export function useTeamRepo(teamId: string, repoId: string) {
   return useQuery({
-    queryKey: ["teams", teamId, "projects", projectId, "repos", repoId],
-    queryFn: () =>
-      api<RepoIntegration>(`${reposPath(teamId, projectId)}/${repoId}`),
-    enabled: Boolean(teamId) && Boolean(projectId) && Boolean(repoId),
+    queryKey: ["teams", teamId, "repos", repoId],
+    queryFn: () => api<RepoIntegration>(`${reposPath(teamId)}/${repoId}`),
+    enabled: Boolean(teamId) && Boolean(repoId),
   })
 }
 
@@ -134,18 +128,16 @@ export function useLlmProvider(id: string) {
   }
 }
 
-export function useCreateRepoIntegration(teamId: string, projectId: string) {
+export function useCreateRepoIntegration(teamId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (payload: RepoIntegrationCreate) =>
-      api<RepoIntegration>(reposPath(teamId, projectId), {
+      api<RepoIntegration>(reposPath(teamId), {
         method: "POST",
         body: JSON.stringify(payload),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["teams", teamId, "projects", projectId, "repos"],
-      })
+      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repos"] })
       queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repositories"] })
       queryClient.invalidateQueries({ queryKey: ["repositories"] })
       queryClient.invalidateQueries({ queryKey: ["settings", "repos"] })
@@ -153,7 +145,7 @@ export function useCreateRepoIntegration(teamId: string, projectId: string) {
   })
 }
 
-export function useUpdateRepoIntegration(teamId: string, projectId: string) {
+export function useUpdateRepoIntegration(teamId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
@@ -163,14 +155,12 @@ export function useUpdateRepoIntegration(teamId: string, projectId: string) {
       id: string
       payload: RepoIntegrationUpdate
     }) =>
-      api<RepoIntegration>(`${reposPath(teamId, projectId)}/${id}`, {
+      api<RepoIntegration>(`${reposPath(teamId)}/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["teams", teamId, "projects", projectId, "repos"],
-      })
+      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repos"] })
       queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repositories"] })
       queryClient.invalidateQueries({ queryKey: ["repositories"] })
       queryClient.invalidateQueries({ queryKey: ["settings", "repos"] })
@@ -178,15 +168,13 @@ export function useUpdateRepoIntegration(teamId: string, projectId: string) {
   })
 }
 
-export function useDeleteRepoIntegration(teamId: string, projectId: string) {
+export function useDeleteRepoIntegration(teamId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) =>
-      api<void>(`${reposPath(teamId, projectId)}/${id}`, { method: "DELETE" }),
+      api<void>(`${reposPath(teamId)}/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["teams", teamId, "projects", projectId, "repos"],
-      })
+      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repos"] })
       queryClient.invalidateQueries({ queryKey: ["teams", teamId, "repositories"] })
       queryClient.invalidateQueries({ queryKey: ["repositories"] })
       queryClient.invalidateQueries({ queryKey: ["settings", "repos"] })

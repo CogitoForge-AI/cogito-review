@@ -7,7 +7,7 @@ import asyncpg
 _REVIEW_SELECT = """
     id, provider, repo_full_name, pr_number, pr_title,
     pr_url, pr_author, head_sha, base_sha, base_ref, head_ref,
-    status, delivery_id, repo_integration_id, team_id, project_id,
+    status, delivery_id, repo_integration_id, team_id,
     error_message, started_at, completed_at, created_at,
     summary_comment_posted, inline_comments_posted, inline_comments_skipped
 """
@@ -30,7 +30,6 @@ class ReviewRow:
     delivery_id: str | None
     repo_integration_id: UUID | None
     team_id: UUID
-    project_id: UUID
     error_message: str | None
     started_at: datetime | None
     completed_at: datetime | None
@@ -121,7 +120,7 @@ class ReviewRepository:
             SELECT r.id, r.provider, r.repo_full_name, r.pr_number, r.pr_title,
                    r.pr_url, r.pr_author, r.head_sha, r.base_sha, r.base_ref,
                    r.head_ref, r.status, r.delivery_id, r.repo_integration_id,
-                   r.team_id, r.project_id, r.error_message, r.started_at,
+                   r.team_id, r.error_message, r.started_at,
                    r.completed_at, r.created_at, r.summary_comment_posted,
                    r.inline_comments_posted, r.inline_comments_skipped,
                    (
@@ -180,7 +179,6 @@ class ReviewRepository:
         delivery_id: str | None,
         repo_integration_id: UUID | None = None,
         team_id: UUID | None = None,
-        project_id: UUID | None = None,
         pr_title: str = "",
         pr_url: str = "",
         pr_author: str = "",
@@ -193,11 +191,11 @@ class ReviewRepository:
             INSERT INTO reviews (
                 provider, repo_full_name, pr_number, pr_title, pr_url, pr_author,
                 head_sha, base_sha, base_ref, head_ref, status,
-                delivery_id, repo_integration_id, team_id, project_id
+                delivery_id, repo_integration_id, team_id
             )
             VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                'pending', $11, $12, $13, $14
+                'pending', $11, $12, $13
             )
             RETURNING {_REVIEW_SELECT}
             """,
@@ -214,7 +212,6 @@ class ReviewRepository:
             delivery_id,
             repo_integration_id,
             team_id,
-            project_id,
         )
         if row is None:
             existing = (
@@ -400,7 +397,6 @@ def _row_to_review(row: asyncpg.Record) -> ReviewRow:
         delivery_id=row["delivery_id"],
         repo_integration_id=row["repo_integration_id"],
         team_id=row["team_id"],
-        project_id=row["project_id"],
         error_message=row["error_message"],
         started_at=row["started_at"],
         completed_at=row["completed_at"],

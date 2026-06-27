@@ -83,7 +83,6 @@ async def test_list_teams_paginated(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_list_org_repositories_paginated(client: AsyncClient) -> None:
     repo_id = uuid4()
-    project_id = uuid4()
     team_id = DEFAULT_TEAM_ID
     now = datetime.now(tz=UTC)
 
@@ -95,7 +94,7 @@ async def test_list_org_repositories_paginated(client: AsyncClient) -> None:
             items=[
                 OrgRepositoryResponse(
                     id=repo_id,
-                    project_id=project_id,
+                    team_id=team_id,
                     name="My Repo",
                     git_provider="github",
                     repo_full_name="owner/repo",
@@ -112,8 +111,6 @@ async def test_list_org_repositories_paginated(client: AsyncClient) -> None:
                     webhook_url="http://example.com/webhook",
                     created_at=now,
                     updated_at=now,
-                    project_name="Default Project",
-                    team_id=team_id,
                     team_name="Default Team",
                 )
             ],

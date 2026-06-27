@@ -398,44 +398,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/teams/{team_id}/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Projects */
-        get: operations["get_projects_api_v1_teams__team_id__projects_get"];
-        put?: never;
-        /** Post Project */
-        post: operations["post_project_api_v1_teams__team_id__projects_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/projects/{project_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Project Route */
-        get: operations["get_project_route_api_v1_teams__team_id__projects__project_id__get"];
-        /** Put Project */
-        put: operations["put_project_api_v1_teams__team_id__projects__project_id__put"];
-        post?: never;
-        /** Delete Project Route */
-        delete: operations["delete_project_route_api_v1_teams__team_id__projects__project_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teams/{team_id}/projects/{project_id}/repos": {
+    "/api/v1/teams/{team_id}/repos": {
         parameters: {
             query?: never;
             header?: never;
@@ -443,17 +406,17 @@ export interface paths {
             cookie?: never;
         };
         /** Get Repos */
-        get: operations["get_repos_api_v1_teams__team_id__projects__project_id__repos_get"];
+        get: operations["get_repos_api_v1_teams__team_id__repos_get"];
         put?: never;
         /** Post Repo */
-        post: operations["post_repo_api_v1_teams__team_id__projects__project_id__repos_post"];
+        post: operations["post_repo_api_v1_teams__team_id__repos_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/teams/{team_id}/projects/{project_id}/repos/{integration_id}": {
+    "/api/v1/teams/{team_id}/repos/{integration_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -461,12 +424,12 @@ export interface paths {
             cookie?: never;
         };
         /** Get Repo */
-        get: operations["get_repo_api_v1_teams__team_id__projects__project_id__repos__integration_id__get"];
+        get: operations["get_repo_api_v1_teams__team_id__repos__integration_id__get"];
         /** Put Repo */
-        put: operations["put_repo_api_v1_teams__team_id__projects__project_id__repos__integration_id__put"];
+        put: operations["put_repo_api_v1_teams__team_id__repos__integration_id__put"];
         post?: never;
         /** Delete Repo */
-        delete: operations["delete_repo_api_v1_teams__team_id__projects__project_id__repos__integration_id__delete"];
+        delete: operations["delete_repo_api_v1_teams__team_id__repos__integration_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -553,7 +516,7 @@ export interface paths {
         };
         /**
          * Get Repo Integrations Legacy
-         * @description Legacy flat list — returns repos in projects under accessible teams.
+         * @description Legacy flat list — returns repos in accessible teams.
          */
         get: operations["get_repo_integrations_legacy_api_v1_settings_repos_get"];
         put?: never;
@@ -1012,10 +975,10 @@ export interface components {
              */
             id: string;
             /**
-             * Project Id
+             * Team Id
              * Format: uuid
              */
-            project_id: string;
+            team_id: string;
             /** Name */
             name: string;
             /** Git Provider */
@@ -1054,79 +1017,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
-            /** Project Name */
-            project_name: string;
-            /**
-             * Team Id
-             * Format: uuid
-             */
-            team_id: string;
             /** Team Name */
             team_name: string;
-        };
-        /** ProjectCreate */
-        ProjectCreate: {
-            /** Name */
-            name: string;
-            /**
-             * Description
-             * @default
-             */
-            description: string;
-            /** Llm Provider Id */
-            llm_provider_id?: string | null;
-        };
-        /** ProjectListResponse */
-        ProjectListResponse: {
-            /** Items */
-            items: components["schemas"]["ProjectResponse"][];
-            /** Total */
-            total: number;
-        };
-        /** ProjectResponse */
-        ProjectResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Team Id
-             * Format: uuid
-             */
-            team_id: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description: string;
-            /** Llm Provider Id */
-            llm_provider_id: string | null;
-            /** Llm Provider Name */
-            llm_provider_name: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /** ProjectUpdate */
-        ProjectUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Llm Provider Id */
-            llm_provider_id?: string | null;
-            /**
-             * Clear Llm Provider Id
-             * @default false
-             */
-            clear_llm_provider_id: boolean;
         };
         /** RepoIntegrationCreate */
         RepoIntegrationCreate: {
@@ -1210,10 +1102,10 @@ export interface components {
              */
             id: string;
             /**
-             * Project Id
+             * Team Id
              * Format: uuid
              */
-            project_id: string;
+            team_id: string;
             /** Name */
             name: string;
             /** Git Provider */
@@ -1393,11 +1285,6 @@ export interface components {
              * Format: uuid
              */
             team_id: string;
-            /**
-             * Project Id
-             * Format: uuid
-             */
-            project_id: string;
             /** Error Message */
             error_message: string | null;
             /** Started At */
@@ -1496,66 +1383,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-        };
-        /** TeamRepositoryListResponse */
-        TeamRepositoryListResponse: {
-            /** Items */
-            items: components["schemas"]["TeamRepositoryResponse"][];
-            /** Total */
-            total: number;
-        };
-        /** TeamRepositoryResponse */
-        TeamRepositoryResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Project Id
-             * Format: uuid
-             */
-            project_id: string;
-            /** Name */
-            name: string;
-            /** Git Provider */
-            git_provider: string;
-            /** Repo Full Name */
-            repo_full_name: string;
-            /** Llm Provider Id */
-            llm_provider_id: string | null;
-            /** Llm Provider Name */
-            llm_provider_name: string | null;
-            /** System Prompt */
-            system_prompt: string;
-            /** Enabled */
-            enabled: boolean;
-            /** Github Webhook Secret Configured */
-            github_webhook_secret_configured: boolean;
-            /** Github Token Configured */
-            github_token_configured: boolean;
-            /** Ado Organization */
-            ado_organization: string;
-            /** Ado Project */
-            ado_project: string;
-            /** Ado Pat Configured */
-            ado_pat_configured: boolean;
-            /** Ado Webhook Configured */
-            ado_webhook_configured: boolean;
-            /** Webhook Url */
-            webhook_url: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /** Project Name */
-            project_name: string;
         };
         /** TeamResponse */
         TeamResponse: {
@@ -2270,7 +2097,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TeamRepositoryListResponse"];
+                    "application/json": components["schemas"]["RepoIntegrationListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2458,185 +2285,7 @@ export interface operations {
             };
         };
     };
-    get_projects_api_v1_teams__team_id__projects_get: {
-        parameters: {
-            query?: {
-                q?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                team_id: string;
-            };
-            cookie?: {
-                cogito_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_project_api_v1_teams__team_id__projects_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: string;
-            };
-            cookie?: {
-                cogito_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_project_route_api_v1_teams__team_id__projects__project_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: string;
-                project_id: string;
-            };
-            cookie?: {
-                cogito_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    put_project_api_v1_teams__team_id__projects__project_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: string;
-                project_id: string;
-            };
-            cookie?: {
-                cogito_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_project_route_api_v1_teams__team_id__projects__project_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                team_id: string;
-                project_id: string;
-            };
-            cookie?: {
-                cogito_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_repos_api_v1_teams__team_id__projects__project_id__repos_get: {
+    get_repos_api_v1_teams__team_id__repos_get: {
         parameters: {
             query?: {
                 q?: string | null;
@@ -2647,7 +2296,6 @@ export interface operations {
             header?: never;
             path: {
                 team_id: string;
-                project_id: string;
             };
             cookie?: {
                 cogito_session?: string | null;
@@ -2675,13 +2323,12 @@ export interface operations {
             };
         };
     };
-    post_repo_api_v1_teams__team_id__projects__project_id__repos_post: {
+    post_repo_api_v1_teams__team_id__repos_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 team_id: string;
-                project_id: string;
             };
             cookie?: {
                 cogito_session?: string | null;
@@ -2713,13 +2360,12 @@ export interface operations {
             };
         };
     };
-    get_repo_api_v1_teams__team_id__projects__project_id__repos__integration_id__get: {
+    get_repo_api_v1_teams__team_id__repos__integration_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 team_id: string;
-                project_id: string;
                 integration_id: string;
             };
             cookie?: {
@@ -2748,13 +2394,12 @@ export interface operations {
             };
         };
     };
-    put_repo_api_v1_teams__team_id__projects__project_id__repos__integration_id__put: {
+    put_repo_api_v1_teams__team_id__repos__integration_id__put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 team_id: string;
-                project_id: string;
                 integration_id: string;
             };
             cookie?: {
@@ -2787,13 +2432,12 @@ export interface operations {
             };
         };
     };
-    delete_repo_api_v1_teams__team_id__projects__project_id__repos__integration_id__delete: {
+    delete_repo_api_v1_teams__team_id__repos__integration_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 team_id: string;
-                project_id: string;
                 integration_id: string;
             };
             cookie?: {

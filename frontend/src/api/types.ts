@@ -31,7 +31,6 @@ export interface Review {
   delivery_id: string | null
   repo_integration_id: string | null
   team_id: string
-  project_id: string
   error_message: string | null
   started_at: string | null
   completed_at: string | null
