@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -16,11 +18,12 @@ async def client_with_db() -> AsyncClient:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_llm_provider(client_with_db: AsyncClient) -> None:
+    suffix = uuid.uuid4().hex[:8]
     create = await client_with_db.post(
         "/api/v1/settings/llm-providers",
         json={
-            "name": "Test Provider",
-            "provider_id": "openai-compat",
+            "name": f"Test Provider {suffix}",
+            "provider_id": f"openai-compat-{suffix}",
             "base_url": "https://llm.example.com/v1",
             "model": "test-model",
             "is_default": False,
@@ -31,10 +34,10 @@ async def test_update_llm_provider(client_with_db: AsyncClient) -> None:
 
     update = await client_with_db.put(
         f"/api/v1/settings/llm-providers/{provider_id}",
-        json={"name": "Test Provider Renamed"},
+        json={"name": f"Test Provider Renamed {suffix}"},
     )
     assert update.status_code == 200
-    assert update.json()["name"] == "Test Provider Renamed"
+    assert update.json()["name"] == f"Test Provider Renamed {suffix}"
 
     delete = await client_with_db.delete(
         f"/api/v1/settings/llm-providers/{provider_id}",

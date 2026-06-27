@@ -3,7 +3,9 @@ import { toast } from "sonner"
 
 import type { LlmProvider, LlmProviderCreate } from "@/api/settings-types"
 import { Field } from "@/components/forms/Field"
+import { ConfirmDialog } from "@/components/patterns/confirm-dialog"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
@@ -15,13 +17,21 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   useCreateLlmProvider,
   useDeleteLlmProvider,
   useUpdateLlmProvider,
 } from "@/hooks/use-settings"
 import { emptyLlmForm, llmProviderIdOptions } from "@/lib/settings-constants"
+import { cn } from "@/lib/utils"
 
 type LlmProviderDialogProps = {
   open: boolean
@@ -29,6 +39,15 @@ type LlmProviderDialogProps = {
   provider?: LlmProvider | null
   sessionKey: number
   canDelete?: boolean
+  onDeleted?: () => void
+}
+
+export type LlmProviderFormProps = {
+  provider?: LlmProvider | null
+  canDelete?: boolean
+  variant?: "dialog" | "page"
+  onSaved?: () => void
+  onCancel?: () => void
   onDeleted?: () => void
 }
 
@@ -45,24 +64,23 @@ function llmFormFromProvider(
   }
 }
 
-function LlmProviderForm({
+export function LlmProviderForm({
   provider,
-  onOpenChange,
   canDelete,
+  variant = "dialog",
+  onSaved,
+  onCancel,
   onDeleted,
-}: {
-  provider?: LlmProvider | null
-  onOpenChange: (open: boolean) => void
-  canDelete?: boolean
-  onDeleted?: () => void
-}) {
+}: LlmProviderFormProps) {
   const isEdit = Boolean(provider)
+  const isPage = variant === "page"
   const createLlm = useCreateLlmProvider()
   const updateLlm = useUpdateLlmProvider()
   const deleteLlm = useDeleteLlmProvider()
 
   const [form, setForm] = useState(() => llmFormFromProvider(provider))
   const [apiToken, setApiToken] = useState("")
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   const isPending =
     createLlm.isPending || updateLlm.isPending || deleteLlm.isPending
@@ -89,7 +107,7 @@ function LlmProviderForm({
         await createLlm.mutateAsync(payload)
         toast.success("LLM provider created")
       }
-      onOpenChange(false)
+      onSaved?.()
     } catch {
       toast.error(
         isEdit ? "Failed to update LLM provider" : "Failed to create LLM provider",
@@ -97,129 +115,173 @@ function LlmProviderForm({
     }
   }
 
-  async function handleDelete() {
+  async function confirmDelete() {
     if (!provider) return
-    if (!confirm(`Delete LLM provider "${provider.name}"?`)) return
     try {
       await deleteLlm.mutateAsync(provider.id)
       toast.success("LLM provider deleted")
-      onOpenChange(false)
+      setDeleteConfirmOpen(false)
       onDeleted?.()
     } catch {
       toast.error("Failed to delete LLM provider")
     }
   }
 
+  const formFields = (
+    <>
+      <Field label="Name">
+        <Input
+          required
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+      </Field>
+      <Field label="Provider ID">
+        <Select
+          value={form.provider_id}
+          onValueChange={(value) => setForm({ ...form, provider_id: value })}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select provider" />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectGroup>
+              {llmProviderIdOptions(form.provider_id).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label="Base URL">
+        <Input
+          required
+          value={form.base_url}
+          onChange={(e) => setForm({ ...form, base_url: e.target.value })}
+        />
+      </Field>
+      <Field label="Model">
+        <Input
+          required
+          value={form.model}
+          onChange={(e) => setForm({ ...form, model: e.target.value })}
+          placeholder="e.g. gpt-4o"
+        />
+      </Field>
+      <Field label={isEdit ? "API token (leave blank to keep)" : "API token"}>
+        <Input
+          type="password"
+          value={isEdit ? apiToken : (form.api_token ?? "")}
+          onChange={(e) =>
+            isEdit
+              ? setApiToken(e.target.value)
+              : setForm({ ...form, api_token: e.target.value })
+          }
+          placeholder={
+            isEdit
+              ? provider?.api_token_configured
+                ? "Configured"
+                : "Not set"
+              : undefined
+          }
+        />
+      </Field>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="llm-is-default"
+          checked={form.is_default ?? false}
+          onCheckedChange={(checked) =>
+            setForm({ ...form, is_default: checked === true })
+          }
+        />
+        <Label htmlFor="llm-is-default" className="font-normal">
+          {isEdit ? "Default LLM provider" : "Set as default LLM provider"}
+        </Label>
+      </div>
+    </>
+  )
+
+  const footerButtons = (
+    <>
+      {isEdit && canDelete ? (
+        <Button
+          type="button"
+          variant="destructive"
+          disabled={isPending}
+          onClick={() => setDeleteConfirmOpen(true)}
+          className="mr-auto"
+        >
+          Delete
+        </Button>
+      ) : null}
+      {onCancel ? (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+      ) : null}
+      <Button type="submit" disabled={isPending}>
+        {isEdit ? "Save changes" : "Create provider"}
+      </Button>
+    </>
+  )
+
   return (
     <>
-      <DialogHeader className="shrink-0 border-b px-6 py-4">
-        <DialogTitle>
-          {isEdit ? "Edit LLM provider" : "Add LLM provider"}
-        </DialogTitle>
-        <DialogDescription>
-          {isEdit
-            ? "Leave API token blank to keep the current value."
-            : "Register a new model endpoint for code reviews."}
-        </DialogDescription>
-      </DialogHeader>
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete LLM provider?"
+        description={`Delete LLM provider "${provider?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={deleteLlm.isPending}
+        onConfirm={confirmDelete}
+      />
 
-      <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-3 overflow-y-auto px-6 py-4">
-          <Field label="Name">
-            <Input
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </Field>
-          <Field label="Provider ID">
-            <Select
-              required
-              value={form.provider_id}
-              onChange={(e) =>
-                setForm({ ...form, provider_id: e.target.value })
-              }
-            >
-              {llmProviderIdOptions(form.provider_id).map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Base URL">
-            <Input
-              required
-              value={form.base_url}
-              onChange={(e) => setForm({ ...form, base_url: e.target.value })}
-            />
-          </Field>
-          <Field label="Model">
-            <Input
-              required
-              value={form.model}
-              onChange={(e) => setForm({ ...form, model: e.target.value })}
-            />
-          </Field>
-          <Field
-            label={isEdit ? "API token (leave blank to keep)" : "API token"}
-          >
-            <Input
-              type="password"
-              value={isEdit ? apiToken : (form.api_token ?? "")}
-              onChange={(e) =>
-                isEdit
-                  ? setApiToken(e.target.value)
-                  : setForm({ ...form, api_token: e.target.value })
-              }
-              placeholder={
-                isEdit
-                  ? provider?.api_token_configured
-                    ? "Configured"
-                    : "Not set"
-                  : undefined
-              }
-            />
-          </Field>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="llm-is-default"
-              checked={form.is_default ?? false}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, is_default: checked === true })
-              }
-            />
-            <Label htmlFor="llm-is-default" className="font-normal">
-              {isEdit ? "Default LLM provider" : "Set as default LLM provider"}
-            </Label>
-          </div>
-        </div>
-
-        <DialogFooter className="shrink-0 border-t px-6 py-4">
-          {isEdit && canDelete ? (
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isPending}
-              onClick={handleDelete}
-              className="mr-auto"
-            >
-              Delete
-            </Button>
-          ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isPending}
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isEdit ? "Save changes" : "Create provider"}
-          </Button>
-        </DialogFooter>
-      </form>
+      {isPage ? (
+        <Card className="max-w-lg">
+          <CardContent>
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+              <div className="flex flex-col gap-3">{formFields}</div>
+              <div
+                className={cn(
+                  "flex shrink-0 items-center gap-2 border-t pt-4",
+                )}
+              >
+                {footerButtons}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <DialogHeader className="shrink-0 border-b px-6 py-4">
+            <DialogTitle>
+              {isEdit ? "Edit LLM provider" : "Add LLM provider"}
+            </DialogTitle>
+            <DialogDescription>
+              {isEdit
+                ? "Leave API token blank to keep the current value."
+                : "Register a new model endpoint for code reviews."}
+            </DialogDescription>
+          </DialogHeader>
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-3 overflow-y-auto px-6 py-4">
+              {formFields}
+            </div>
+            <DialogFooter className="shrink-0 border-t px-6 py-4 sm:justify-start">
+              {footerButtons}
+            </DialogFooter>
+          </form>
+        </>
+      )}
     </>
   )
 }
@@ -241,9 +303,13 @@ export function LlmProviderDialog({
           <LlmProviderForm
             key={formKey}
             provider={provider}
-            onOpenChange={onOpenChange}
             canDelete={canDelete}
-            onDeleted={onDeleted}
+            onSaved={() => onOpenChange(false)}
+            onCancel={() => onOpenChange(false)}
+            onDeleted={() => {
+              onOpenChange(false)
+              onDeleted?.()
+            }}
           />
         ) : null}
       </DialogContent>

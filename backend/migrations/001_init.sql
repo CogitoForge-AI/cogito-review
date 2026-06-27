@@ -48,10 +48,10 @@ CREATE TABLE IF NOT EXISTS integration_settings (
   github_repo_full_name TEXT NOT NULL DEFAULT '',
   github_webhook_secret TEXT NOT NULL DEFAULT '',
   github_token TEXT NOT NULL DEFAULT '',
-  llm_provider_id TEXT NOT NULL DEFAULT 'openai-compat',
-  llm_base_url TEXT NOT NULL DEFAULT 'https://api.openai.com/v1',
+  llm_provider_id TEXT NOT NULL DEFAULT '',
+  llm_base_url TEXT NOT NULL DEFAULT '',
   llm_api_token TEXT NOT NULL DEFAULT '',
-  llm_model TEXT NOT NULL DEFAULT 'gpt-4o',
+  llm_model TEXT NOT NULL DEFAULT '',
   opencode_model TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS llm_providers (
   provider_id TEXT NOT NULL,
   base_url TEXT NOT NULL DEFAULT 'https://api.openai.com/v1',
   api_token TEXT NOT NULL DEFAULT '',
-  model TEXT NOT NULL DEFAULT 'gpt-4o',
+  model TEXT NOT NULL DEFAULT '',
   opencode_model TEXT NOT NULL DEFAULT '',
   is_default BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -97,7 +97,24 @@ ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS repo_integration_id UUID
   REFERENCES repo_integrations(id) ON DELETE SET NULL;
 
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS pr_url TEXT NOT NULL DEFAULT '';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS pr_author TEXT NOT NULL DEFAULT '';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS base_sha TEXT NOT NULL DEFAULT '';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS base_ref TEXT NOT NULL DEFAULT '';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS head_ref TEXT NOT NULL DEFAULT '';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS summary_comment_posted BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS inline_comments_posted INT NOT NULL DEFAULT 0;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS inline_comments_skipped INT NOT NULL DEFAULT 0;
+
 -- migrate:down
+ALTER TABLE reviews DROP COLUMN IF EXISTS inline_comments_skipped;
+ALTER TABLE reviews DROP COLUMN IF EXISTS inline_comments_posted;
+ALTER TABLE reviews DROP COLUMN IF EXISTS summary_comment_posted;
+ALTER TABLE reviews DROP COLUMN IF EXISTS head_ref;
+ALTER TABLE reviews DROP COLUMN IF EXISTS base_ref;
+ALTER TABLE reviews DROP COLUMN IF EXISTS base_sha;
+ALTER TABLE reviews DROP COLUMN IF EXISTS pr_author;
+ALTER TABLE reviews DROP COLUMN IF EXISTS pr_url;
 ALTER TABLE reviews DROP COLUMN IF EXISTS repo_integration_id;
 DROP TABLE IF EXISTS repo_integrations;
 DROP TABLE IF EXISTS llm_providers;
