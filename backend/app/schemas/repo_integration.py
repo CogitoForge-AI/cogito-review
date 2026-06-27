@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.schemas.pagination import PaginatedResponse
+
 
 class RepoIntegrationResponse(BaseModel):
     id: UUID
@@ -93,3 +95,15 @@ class TeamRepositoryResponse(RepoIntegrationResponse):
 class OrgRepositoryResponse(TeamRepositoryResponse):
     team_id: UUID
     team_name: str
+
+
+class RepoIntegrationListResponse(PaginatedResponse[RepoIntegrationResponse]):
+    pass
+
+
+class TeamRepositoryListResponse(PaginatedResponse[TeamRepositoryResponse]):
+    pass
+
+
+class OrgRepositoryListResponse(PaginatedResponse[OrgRepositoryResponse]):
+    pass

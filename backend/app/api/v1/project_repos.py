@@ -1,12 +1,14 @@
 from uuid import UUID
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.api.pagination import PaginationParams
 from app.auth.dependencies import require_team_member
 from app.dependencies import get_conn
 from app.schemas.repo_integration import (
     RepoIntegrationCreate,
+    RepoIntegrationListResponse,
     RepoIntegrationResponse,
     RepoIntegrationUpdate,
 )
@@ -15,7 +17,7 @@ from app.services.repo_integrations import (
     create_repo_integration,
     delete_repo_integration,
     get_repo_integration,
-    list_repo_integrations_for_project,
+    list_repo_integrations_for_project_paginated,
     update_repo_integration,
 )
 
@@ -35,16 +37,26 @@ async def _assert_project_in_team(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
-@router.get("", response_model=list[RepoIntegrationResponse])
+@router.get("", response_model=RepoIntegrationListResponse)
 async def get_repos(
     team_id: UUID,
     project_id: UUID,
+    q: str | None = Query(None, max_length=200),
+    enabled: bool | None = Query(None),
+    pagination: PaginationParams = Depends(),
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
-) -> list[RepoIntegrationResponse]:
+) -> RepoIntegrationListResponse:
     await _assert_project_in_team(conn, team_id, project_id)
     try:
-        return await list_repo_integrations_for_project(conn, project_id)
+        return await list_repo_integrations_for_project_paginated(
+            conn,
+            project_id,
+            search=q,
+            enabled=enabled,
+            limit=pagination.limit,
+            offset=pagination.offset,
+        )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 

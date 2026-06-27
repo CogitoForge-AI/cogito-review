@@ -49,7 +49,7 @@ function RepositoryDetailPage() {
 
   const repo = repoQuery.data
   const reviews = useReviews(
-    repo?.repo_full_name ? { repo: repo.repo_full_name } : undefined,
+    repo?.repo_full_name ? { repo: [repo.repo_full_name] } : undefined,
   )
 
   const reviewColumns = useMemo<ColumnDef<Review>[]>(

@@ -9,11 +9,26 @@ import type {
   RepoIntegrationCreate,
   RepoIntegrationUpdate,
 } from "@/api/settings-types"
+import { usePaginatedList } from "@/hooks/use-paginated-list"
+
+const OPTIONS_PAGE_SIZE = 100
+
+export function useLlmProvidersPage(params: { page: number; q?: string }) {
+  const query = params.q?.trim() ?? ""
+  return usePaginatedList<LlmProvider>({
+    queryKey: ["settings", "llm-providers", query],
+    path: "/settings/llm-providers",
+    page: params.page,
+    filters: query ? { q: query } : undefined,
+  })
+}
 
 export function useLlmProviders() {
-  return useQuery({
-    queryKey: ["settings", "llm-providers"],
-    queryFn: () => api<LlmProvider[]>("/settings/llm-providers"),
+  return usePaginatedList<LlmProvider>({
+    queryKey: ["settings", "llm-providers", "options"],
+    path: "/settings/llm-providers",
+    page: 1,
+    pageSize: OPTIONS_PAGE_SIZE,
   })
 }
 
@@ -66,10 +81,17 @@ function reposPath(teamId: string, projectId: string) {
   return `/teams/${teamId}/projects/${projectId}/repos`
 }
 
-export function useProjectRepos(teamId: string, projectId: string) {
-  return useQuery({
-    queryKey: ["teams", teamId, "projects", projectId, "repos"],
-    queryFn: () => api<RepoIntegration[]>(reposPath(teamId, projectId)),
+export function useProjectReposPage(
+  teamId: string,
+  projectId: string,
+  params: { page: number; q?: string },
+) {
+  const query = params.q?.trim() ?? ""
+  return usePaginatedList<RepoIntegration>({
+    queryKey: ["teams", teamId, "projects", projectId, "repos", query],
+    path: reposPath(teamId, projectId),
+    page: params.page,
+    filters: query ? { q: query } : undefined,
     enabled: Boolean(teamId) && Boolean(projectId),
   })
 }
@@ -79,33 +101,36 @@ export function useProjectRepo(
   projectId: string,
   repoId: string,
 ) {
-  const query = useProjectRepos(teamId, projectId)
-  return {
-    ...query,
-    data: query.data?.find((repo) => repo.id === repoId),
-  }
+  return useQuery({
+    queryKey: ["teams", teamId, "projects", projectId, "repos", repoId],
+    queryFn: () =>
+      api<RepoIntegration>(`${reposPath(teamId, projectId)}/${repoId}`),
+    enabled: Boolean(teamId) && Boolean(projectId) && Boolean(repoId),
+  })
 }
 
 export function useRepoIntegrations() {
-  return useQuery({
-    queryKey: ["settings", "repos"],
-    queryFn: () => api<RepoIntegration[]>("/settings/repos"),
+  return usePaginatedList<RepoIntegration>({
+    queryKey: ["settings", "repos", "options"],
+    path: "/settings/repos",
+    page: 1,
+    pageSize: OPTIONS_PAGE_SIZE,
   })
 }
 
 export function useRepoIntegration(id: string) {
-  const query = useRepoIntegrations()
-  return {
-    ...query,
-    data: query.data?.find((repo) => repo.id === id),
-  }
+  return useQuery({
+    queryKey: ["settings", "repos", id],
+    queryFn: () => api<RepoIntegration>(`/settings/repos/${id}`),
+    enabled: Boolean(id),
+  })
 }
 
 export function useLlmProvider(id: string) {
   const query = useLlmProviders()
   return {
     ...query,
-    data: query.data?.find((provider) => provider.id === id),
+    data: query.data?.items.find((provider) => provider.id === id),
   }
 }
 

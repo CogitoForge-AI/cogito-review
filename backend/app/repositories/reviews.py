@@ -58,16 +58,15 @@ class ReviewRepository:
     def __init__(self, conn: asyncpg.Connection) -> None:
         self._conn = conn
 
-    async def list_reviews(
+    def _review_filter_clauses(
         self,
         *,
         team_ids: list[UUID] | None = None,
         status: str | None = None,
-        repo_full_name: str | None = None,
+        repo_full_names: list[str] | None = None,
         pr_number: int | None = None,
-        limit: int = 50,
-        offset: int = 0,
-    ) -> list[ReviewRow]:
+        search: str | None = None,
+    ) -> tuple[list[str], list[object]]:
         clauses = ["1=1"]
         args: list[object] = []
         idx = 1
@@ -79,14 +78,44 @@ class ReviewRepository:
             clauses.append(f"status = ${idx}")
             args.append(status)
             idx += 1
-        if repo_full_name:
-            clauses.append(f"repo_full_name = ${idx}")
-            args.append(repo_full_name)
+        if repo_full_names:
+            clauses.append(f"repo_full_name = ANY(${idx}::text[])")
+            args.append(repo_full_names)
             idx += 1
         if pr_number is not None:
             clauses.append(f"pr_number = ${idx}")
             args.append(pr_number)
             idx += 1
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(repo_full_name ILIKE ${idx} OR pr_title ILIKE ${idx} "
+                f"OR pr_author ILIKE ${idx} OR head_ref ILIKE ${idx} "
+                f"OR base_ref ILIKE ${idx} "
+                f"OR CAST(pr_number AS TEXT) ILIKE ${idx})"
+            )
+            args.append(pattern)
+        return clauses, args
+
+    async def list_reviews(
+        self,
+        *,
+        team_ids: list[UUID] | None = None,
+        status: str | None = None,
+        repo_full_names: list[str] | None = None,
+        pr_number: int | None = None,
+        search: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[ReviewRow]:
+        clauses, args = self._review_filter_clauses(
+            team_ids=team_ids,
+            status=status,
+            repo_full_names=repo_full_names,
+            pr_number=pr_number,
+            search=search,
+        )
+        idx = len(args) + 1
         args.extend([limit, offset])
         query = f"""
             SELECT r.id, r.provider, r.repo_full_name, r.pr_number, r.pr_title,
@@ -113,28 +142,17 @@ class ReviewRepository:
         *,
         team_ids: list[UUID] | None = None,
         status: str | None = None,
-        repo_full_name: str | None = None,
+        repo_full_names: list[str] | None = None,
         pr_number: int | None = None,
+        search: str | None = None,
     ) -> int:
-        clauses = ["1=1"]
-        args: list[object] = []
-        idx = 1
-        if team_ids is not None:
-            clauses.append(f"team_id = ANY(${idx}::uuid[])")
-            args.append(team_ids)
-            idx += 1
-        if status:
-            clauses.append(f"status = ${idx}")
-            args.append(status)
-            idx += 1
-        if repo_full_name:
-            clauses.append(f"repo_full_name = ${idx}")
-            args.append(repo_full_name)
-            idx += 1
-        if pr_number is not None:
-            clauses.append(f"pr_number = ${idx}")
-            args.append(pr_number)
-            idx += 1
+        clauses, args = self._review_filter_clauses(
+            team_ids=team_ids,
+            status=status,
+            repo_full_names=repo_full_names,
+            pr_number=pr_number,
+            search=search,
+        )
         query = f"SELECT COUNT(*)::int FROM reviews WHERE {' AND '.join(clauses)}"
         return await self._conn.fetchval(query, *args) or 0
 

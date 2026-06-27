@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.schemas.pagination import PaginatedResponse
+
 
 class ProjectResponse(BaseModel):
     id: UUID
@@ -19,6 +21,10 @@ class ProjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     description: str = Field(default="", max_length=1024)
     llm_provider_id: UUID | None = None
+
+
+class ProjectListResponse(PaginatedResponse[ProjectResponse]):
+    pass
 
 
 class ProjectUpdate(BaseModel):

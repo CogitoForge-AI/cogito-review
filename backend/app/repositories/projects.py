@@ -35,6 +35,68 @@ class ProjectRepository:
         )
         return [_row_to_project(row) for row in rows]
 
+    async def list_for_team_paginated(
+        self,
+        team_id: UUID,
+        *,
+        search: str = "",
+        limit: int,
+        offset: int,
+    ) -> list[ProjectRow]:
+        if search:
+            pattern = f"%{search}%"
+            rows = await self._conn.fetch(
+                """
+                SELECT id, team_id, name, description, llm_provider_id,
+                       created_at, updated_at
+                FROM projects
+                WHERE team_id = $1 AND name ILIKE $2
+                ORDER BY name ASC
+                LIMIT $3 OFFSET $4
+                """,
+                team_id,
+                pattern,
+                limit,
+                offset,
+            )
+        else:
+            rows = await self._conn.fetch(
+                """
+                SELECT id, team_id, name, description, llm_provider_id,
+                       created_at, updated_at
+                FROM projects
+                WHERE team_id = $1
+                ORDER BY name ASC
+                LIMIT $2 OFFSET $3
+                """,
+                team_id,
+                limit,
+                offset,
+            )
+        return [_row_to_project(row) for row in rows]
+
+    async def count_for_team(self, team_id: UUID, *, search: str = "") -> int:
+        if search:
+            pattern = f"%{search}%"
+            return (
+                await self._conn.fetchval(
+                    """
+                    SELECT COUNT(*)::int FROM projects
+                    WHERE team_id = $1 AND name ILIKE $2
+                    """,
+                    team_id,
+                    pattern,
+                )
+                or 0
+            )
+        return (
+            await self._conn.fetchval(
+                "SELECT COUNT(*)::int FROM projects WHERE team_id = $1",
+                team_id,
+            )
+            or 0
+        )
+
     async def get(self, project_id: UUID) -> ProjectRow | None:
         row = await self._conn.fetchrow(
             """

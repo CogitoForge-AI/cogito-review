@@ -70,6 +70,66 @@ class RepoIntegrationRepository:
         )
         return [_row_to_repo_integration(row) for row in rows]
 
+    async def list_for_project_paginated(
+        self,
+        project_id: UUID,
+        *,
+        search: str = "",
+        enabled: bool | None = None,
+        limit: int,
+        offset: int,
+    ) -> list[RepoIntegrationRow]:
+        clauses = ["project_id = $1"]
+        args: list[object] = [project_id]
+        idx = 2
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(repo_full_name ILIKE ${idx} OR name ILIKE ${idx})"
+            )
+            args.append(pattern)
+            idx += 1
+        if enabled is not None:
+            clauses.append(f"enabled = ${idx}")
+            args.append(enabled)
+            idx += 1
+        args.extend([limit, offset])
+        query = f"""
+            SELECT {_SELECT_COLUMNS}
+            FROM repo_integrations
+            WHERE {" AND ".join(clauses)}
+            ORDER BY repo_full_name ASC NULLS FIRST, name ASC
+            LIMIT ${idx} OFFSET ${idx + 1}
+        """
+        rows = await self._conn.fetch(query, *args)
+        return [_row_to_repo_integration(row) for row in rows]
+
+    async def count_for_project(
+        self,
+        project_id: UUID,
+        *,
+        search: str = "",
+        enabled: bool | None = None,
+    ) -> int:
+        clauses = ["project_id = $1"]
+        args: list[object] = [project_id]
+        idx = 2
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(repo_full_name ILIKE ${idx} OR name ILIKE ${idx})"
+            )
+            args.append(pattern)
+            idx += 1
+        if enabled is not None:
+            clauses.append(f"enabled = ${idx}")
+            args.append(enabled)
+        query = f"""
+            SELECT COUNT(*)::int FROM repo_integrations
+            WHERE {" AND ".join(clauses)}
+        """
+        return await self._conn.fetchval(query, *args) or 0
+
     async def list_for_team(
         self, team_id: UUID
     ) -> list[tuple[RepoIntegrationRow, str]]:
@@ -88,6 +148,65 @@ class RepoIntegrationRepository:
             team_id,
         )
         return [(_row_to_repo_integration(row), row["project_name"]) for row in rows]
+
+    async def list_for_team_paginated(
+        self,
+        team_id: UUID,
+        *,
+        search: str = "",
+        limit: int,
+        offset: int,
+    ) -> list[tuple[RepoIntegrationRow, str]]:
+        clauses = ["p.team_id = $1"]
+        args: list[object] = [team_id]
+        idx = 2
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(ri.repo_full_name ILIKE ${idx} OR ri.name ILIKE ${idx} "
+                f"OR p.name ILIKE ${idx})"
+            )
+            args.append(pattern)
+            idx += 1
+        args.extend([limit, offset])
+        query = f"""
+            SELECT ri.id, ri.project_id, ri.name, ri.git_provider, ri.repo_full_name,
+                   ri.llm_provider_id, ri.github_webhook_secret, ri.github_token,
+                   ri.system_prompt, ri.enabled, ri.ado_organization, ri.ado_project,
+                   ri.ado_pat, ri.ado_webhook_username, ri.ado_webhook_password,
+                   ri.created_at, ri.updated_at, p.name AS project_name
+            FROM repo_integrations ri
+            JOIN projects p ON p.id = ri.project_id
+            WHERE {" AND ".join(clauses)}
+            ORDER BY p.name ASC, ri.repo_full_name ASC NULLS FIRST, ri.name ASC
+            LIMIT ${idx} OFFSET ${idx + 1}
+        """
+        rows = await self._conn.fetch(query, *args)
+        return [(_row_to_repo_integration(row), row["project_name"]) for row in rows]
+
+    async def count_for_team(
+        self,
+        team_id: UUID,
+        *,
+        search: str = "",
+    ) -> int:
+        clauses = ["p.team_id = $1"]
+        args: list[object] = [team_id]
+        idx = 2
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(ri.repo_full_name ILIKE ${idx} OR ri.name ILIKE ${idx} "
+                f"OR p.name ILIKE ${idx})"
+            )
+            args.append(pattern)
+        query = f"""
+            SELECT COUNT(*)::int
+            FROM repo_integrations ri
+            JOIN projects p ON p.id = ri.project_id
+            WHERE {" AND ".join(clauses)}
+        """
+        return await self._conn.fetchval(query, *args) or 0
 
     async def list_for_teams(
         self, team_ids: list[UUID]
@@ -120,6 +239,115 @@ class RepoIntegrationRepository:
             )
             for row in rows
         ]
+
+    async def list_for_teams_paginated(
+        self,
+        team_ids: list[UUID],
+        *,
+        search: str = "",
+        filter_team_ids: list[UUID] | None = None,
+        enabled: bool | None = None,
+        git_provider: str | None = None,
+        limit: int,
+        offset: int,
+    ) -> list[tuple[RepoIntegrationRow, str, UUID, str]]:
+        if not team_ids:
+            return []
+        scoped_ids = team_ids
+        if filter_team_ids:
+            allowed = set(team_ids)
+            scoped_ids = [tid for tid in filter_team_ids if tid in allowed]
+            if not scoped_ids:
+                return []
+        clauses = ["p.team_id = ANY($1::uuid[])"]
+        args: list[object] = [scoped_ids]
+        idx = 2
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(ri.repo_full_name ILIKE ${idx} OR ri.name ILIKE ${idx} "
+                f"OR p.name ILIKE ${idx} OR t.name ILIKE ${idx})"
+            )
+            args.append(pattern)
+            idx += 1
+        if enabled is not None:
+            clauses.append(f"ri.enabled = ${idx}")
+            args.append(enabled)
+            idx += 1
+        if git_provider:
+            clauses.append(f"ri.git_provider = ${idx}")
+            args.append(git_provider)
+            idx += 1
+        args.extend([limit, offset])
+        query = f"""
+            SELECT ri.id, ri.project_id, ri.name, ri.git_provider, ri.repo_full_name,
+                   ri.llm_provider_id, ri.github_webhook_secret, ri.github_token,
+                   ri.system_prompt, ri.enabled, ri.ado_organization, ri.ado_project,
+                   ri.ado_pat, ri.ado_webhook_username, ri.ado_webhook_password,
+                   ri.created_at, ri.updated_at, p.name AS project_name,
+                   p.team_id, t.name AS team_name
+            FROM repo_integrations ri
+            JOIN projects p ON p.id = ri.project_id
+            JOIN teams t ON t.id = p.team_id
+            WHERE {" AND ".join(clauses)}
+            ORDER BY t.name ASC, p.name ASC,
+                     ri.repo_full_name ASC NULLS FIRST, ri.name ASC
+            LIMIT ${idx} OFFSET ${idx + 1}
+        """
+        rows = await self._conn.fetch(query, *args)
+        return [
+            (
+                _row_to_repo_integration(row),
+                row["project_name"],
+                row["team_id"],
+                row["team_name"],
+            )
+            for row in rows
+        ]
+
+    async def count_for_teams(
+        self,
+        team_ids: list[UUID],
+        *,
+        search: str = "",
+        filter_team_ids: list[UUID] | None = None,
+        enabled: bool | None = None,
+        git_provider: str | None = None,
+    ) -> int:
+        if not team_ids:
+            return 0
+        scoped_ids = team_ids
+        if filter_team_ids:
+            allowed = set(team_ids)
+            scoped_ids = [tid for tid in filter_team_ids if tid in allowed]
+            if not scoped_ids:
+                return 0
+        clauses = ["p.team_id = ANY($1::uuid[])"]
+        args: list[object] = [scoped_ids]
+        idx = 2
+        if search:
+            pattern = f"%{search}%"
+            clauses.append(
+                f"(ri.repo_full_name ILIKE ${idx} OR ri.name ILIKE ${idx} "
+                f"OR p.name ILIKE ${idx} OR t.name ILIKE ${idx})"
+            )
+            args.append(pattern)
+            idx += 1
+        if enabled is not None:
+            clauses.append(f"ri.enabled = ${idx}")
+            args.append(enabled)
+            idx += 1
+        if git_provider:
+            clauses.append(f"ri.git_provider = ${idx}")
+            args.append(git_provider)
+        query = f"""
+            SELECT COUNT(*)::int
+            FROM repo_integrations ri
+            JOIN projects p ON p.id = ri.project_id
+            JOIN teams t ON t.id = p.team_id
+            WHERE {" AND ".join(clauses)}
+        """
+        return await self._conn.fetchval(query, *args) or 0
 
     async def get(self, integration_id: UUID) -> RepoIntegrationRow | None:
         row = await self._conn.fetchrow(

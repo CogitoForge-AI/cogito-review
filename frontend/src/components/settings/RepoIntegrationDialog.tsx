@@ -75,7 +75,7 @@ function RepoIntegrationForm({
   const createRepo = useCreateRepoIntegration(teamId, projectId)
   const updateRepo = useUpdateRepoIntegration(teamId, projectId)
   const deleteRepo = useDeleteRepoIntegration(teamId, projectId)
-  const enabledLlmProviders = (llmProviders.data ?? []).filter(
+  const enabledLlmProviders = (llmProviders.data?.items ?? []).filter(
     (provider) => provider.enabled,
   )
 

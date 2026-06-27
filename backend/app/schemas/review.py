@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.schemas.pagination import PaginatedResponse
+
 
 class ReviewFindingResponse(BaseModel):
     id: UUID
@@ -29,6 +31,7 @@ class ReviewResponse(BaseModel):
     head_ref: str = ""
     status: str
     delivery_id: str | None
+    repo_integration_id: UUID | None = None
     team_id: UUID
     project_id: UUID
     error_message: str | None
@@ -42,6 +45,5 @@ class ReviewResponse(BaseModel):
     findings: list[ReviewFindingResponse] = Field(default_factory=list)
 
 
-class ReviewListResponse(BaseModel):
-    items: list[ReviewResponse]
-    total: int
+class ReviewListResponse(PaginatedResponse[ReviewResponse]):
+    pass

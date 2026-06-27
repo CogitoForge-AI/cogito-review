@@ -1,30 +1,44 @@
 from uuid import UUID
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.api.pagination import PaginationParams
 from app.auth.dependencies import require_team_member
 from app.dependencies import get_conn
-from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectListResponse,
+    ProjectResponse,
+    ProjectUpdate,
+)
 from app.services.projects import (
     create_project,
     delete_project,
     get_project,
-    list_projects,
+    list_projects_paginated,
     update_project,
 )
 
 router = APIRouter()
 
 
-@router.get("", response_model=list[ProjectResponse])
+@router.get("", response_model=ProjectListResponse)
 async def get_projects(
     team_id: UUID,
+    q: str | None = Query(None, max_length=200),
+    pagination: PaginationParams = Depends(),
     conn: asyncpg.Connection = Depends(get_conn),
     _user=Depends(require_team_member),
-) -> list[ProjectResponse]:
+) -> ProjectListResponse:
     try:
-        return await list_projects(conn, team_id)
+        return await list_projects_paginated(
+            conn,
+            team_id,
+            search=q,
+            limit=pagination.limit,
+            offset=pagination.offset,
+        )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 

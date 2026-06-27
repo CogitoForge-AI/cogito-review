@@ -40,7 +40,7 @@ export function TeamRepositoryAddDialog({
   const [projectId, setProjectId] = useState("")
   const [repoDialogOpen, setRepoDialogOpen] = useState(false)
   const [repoDialogSession, setRepoDialogSession] = useState(0)
-  const projectList = projects.data ?? []
+  const projectList = projects.data?.items ?? []
 
   function handleClose(nextOpen: boolean) {
     if (!nextOpen) {

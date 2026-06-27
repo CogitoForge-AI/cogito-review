@@ -537,8 +537,8 @@ export interface paths {
         /** Put Llm Provider */
         put: operations["put_llm_provider_api_v1_settings_llm_providers__provider_id__put"];
         post?: never;
-        /** Remove Llm Provider */
-        delete: operations["remove_llm_provider_api_v1_settings_llm_providers__provider_id__delete"];
+        /** Delete Llm Provider Route */
+        delete: operations["delete_llm_provider_route_api_v1_settings_llm_providers__provider_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -917,6 +917,13 @@ export interface components {
              */
             enabled: boolean;
         };
+        /** LlmProviderListResponse */
+        LlmProviderListResponse: {
+            /** Items */
+            items: components["schemas"]["LlmProviderResponse"][];
+            /** Total */
+            total: number;
+        };
         /** LlmProviderResponse */
         LlmProviderResponse: {
             /**
@@ -990,6 +997,13 @@ export interface components {
             /** Auth Enabled */
             auth_enabled: boolean;
         };
+        /** OrgRepositoryListResponse */
+        OrgRepositoryListResponse: {
+            /** Items */
+            items: components["schemas"]["OrgRepositoryResponse"][];
+            /** Total */
+            total: number;
+        };
         /** OrgRepositoryResponse */
         OrgRepositoryResponse: {
             /**
@@ -1061,6 +1075,13 @@ export interface components {
             description: string;
             /** Llm Provider Id */
             llm_provider_id?: string | null;
+        };
+        /** ProjectListResponse */
+        ProjectListResponse: {
+            /** Items */
+            items: components["schemas"]["ProjectResponse"][];
+            /** Total */
+            total: number;
         };
         /** ProjectResponse */
         ProjectResponse: {
@@ -1173,6 +1194,13 @@ export interface components {
              * @default true
              */
             enabled: boolean;
+        };
+        /** RepoIntegrationListResponse */
+        RepoIntegrationListResponse: {
+            /** Items */
+            items: components["schemas"]["RepoIntegrationResponse"][];
+            /** Total */
+            total: number;
         };
         /** RepoIntegrationResponse */
         RepoIntegrationResponse: {
@@ -1358,6 +1386,8 @@ export interface components {
             status: string;
             /** Delivery Id */
             delivery_id: string | null;
+            /** Repo Integration Id */
+            repo_integration_id?: string | null;
             /**
              * Team Id
              * Format: uuid
@@ -1416,6 +1446,13 @@ export interface components {
             /** Slug */
             slug?: string | null;
         };
+        /** TeamListResponse */
+        TeamListResponse: {
+            /** Items */
+            items: components["schemas"]["TeamResponse"][];
+            /** Total */
+            total: number;
+        };
         /** TeamMemberCreate */
         TeamMemberCreate: {
             /**
@@ -1428,6 +1465,13 @@ export interface components {
              * @default member
              */
             role: string;
+        };
+        /** TeamMemberListResponse */
+        TeamMemberListResponse: {
+            /** Items */
+            items: components["schemas"]["TeamMemberResponse"][];
+            /** Total */
+            total: number;
         };
         /** TeamMemberResponse */
         TeamMemberResponse: {
@@ -1452,6 +1496,13 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** TeamRepositoryListResponse */
+        TeamRepositoryListResponse: {
+            /** Items */
+            items: components["schemas"]["TeamRepositoryResponse"][];
+            /** Total */
+            total: number;
         };
         /** TeamRepositoryResponse */
         TeamRepositoryResponse: {
@@ -1953,8 +2004,9 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string | null;
-                repo?: string | null;
+                repo?: string[];
                 pr?: number | null;
+                q?: string | null;
                 limit?: number;
                 offset?: number;
             };
@@ -2054,7 +2106,14 @@ export interface operations {
     };
     get_org_repositories_api_v1_repositories_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                team_id?: string[];
+                enabled?: boolean | null;
+                git_provider?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: {
@@ -2069,7 +2128,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrgRepositoryResponse"][];
+                    "application/json": components["schemas"]["OrgRepositoryListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2120,7 +2179,11 @@ export interface operations {
     };
     get_teams_api_v1_teams_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: {
@@ -2135,7 +2198,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TeamResponse"][];
+                    "application/json": components["schemas"]["TeamListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2186,7 +2249,11 @@ export interface operations {
     };
     get_team_repositories_api_v1_teams__team_id__repositories_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path: {
                 team_id: string;
@@ -2203,7 +2270,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TeamRepositoryResponse"][];
+                    "application/json": components["schemas"]["TeamRepositoryListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2287,7 +2354,11 @@ export interface operations {
     };
     get_team_members_api_v1_teams__team_id__members_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path: {
                 team_id: string;
@@ -2304,7 +2375,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TeamMemberResponse"][];
+                    "application/json": components["schemas"]["TeamMemberListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2389,7 +2460,11 @@ export interface operations {
     };
     get_projects_api_v1_teams__team_id__projects_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path: {
                 team_id: string;
@@ -2406,7 +2481,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProjectResponse"][];
+                    "application/json": components["schemas"]["ProjectListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2563,7 +2638,12 @@ export interface operations {
     };
     get_repos_api_v1_teams__team_id__projects__project_id__repos_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                enabled?: boolean | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path: {
                 team_id: string;
@@ -2581,7 +2661,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepoIntegrationResponse"][];
+                    "application/json": components["schemas"]["RepoIntegrationListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2872,7 +2952,11 @@ export interface operations {
     };
     get_llm_providers_api_v1_settings_llm_providers_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: {
@@ -2887,7 +2971,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LlmProviderResponse"][];
+                    "application/json": components["schemas"]["LlmProviderListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2973,7 +3057,7 @@ export interface operations {
             };
         };
     };
-    remove_llm_provider_api_v1_settings_llm_providers__provider_id__delete: {
+    delete_llm_provider_route_api_v1_settings_llm_providers__provider_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -3006,7 +3090,14 @@ export interface operations {
     };
     get_repo_integrations_legacy_api_v1_settings_repos_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                team_id?: string[];
+                enabled?: boolean | null;
+                git_provider?: string | null;
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: {
@@ -3021,7 +3112,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepoIntegrationResponse"][];
+                    "application/json": components["schemas"]["RepoIntegrationListResponse"];
                 };
             };
             /** @description Validation Error */

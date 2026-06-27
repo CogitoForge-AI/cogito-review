@@ -4,7 +4,12 @@ from uuid import UUID
 from app.repositories.llm_providers import LlmProviderRepository
 from app.repositories.projects import ProjectRepository, ProjectRow
 from app.repositories.teams import TeamRepository
-from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectListResponse,
+    ProjectResponse,
+    ProjectUpdate,
+)
 from app.services.access_control import get_default_organization_id
 
 logger = logging.getLogger(__name__)
@@ -47,16 +52,38 @@ def to_project_response(
 
 
 async def list_projects(conn, team_id: UUID) -> list[ProjectResponse]:
+    result = await list_projects_paginated(
+        conn, team_id, search="", limit=100, offset=0
+    )
+    return result.items
+
+
+async def list_projects_paginated(
+    conn,
+    team_id: UUID,
+    *,
+    search: str | None,
+    limit: int,
+    offset: int,
+) -> ProjectListResponse:
     team = await TeamRepository(conn).get(team_id)
     if team is None:
         msg = "team not found"
         raise ValueError(msg)
-    rows = await ProjectRepository(conn).list_for_team(team_id)
-    result: list[ProjectResponse] = []
+    repo = ProjectRepository(conn)
+    query = (search or "").strip()
+    rows = await repo.list_for_team_paginated(
+        team_id,
+        search=query,
+        limit=limit,
+        offset=offset,
+    )
+    total = await repo.count_for_team(team_id, search=query)
+    items: list[ProjectResponse] = []
     for row in rows:
         name = await _llm_provider_name(conn, row.llm_provider_id)
-        result.append(to_project_response(row, name))
-    return result
+        items.append(to_project_response(row, name))
+    return ProjectListResponse(items=items, total=total)
 
 
 async def get_project(conn, project_id: UUID) -> ProjectResponse:

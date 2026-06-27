@@ -4,8 +4,8 @@ import { toast } from "sonner"
 
 import { AppShell } from "@/components/layout/AppShell"
 import { RepoIntegrationDialog } from "@/components/settings/RepoIntegrationDialog"
-import { DataPanel } from "@/components/patterns/data-panel"
 import { EmptyState } from "@/components/patterns/empty-state"
+import { PaginatedListPanel } from "@/components/patterns/paginated-list-panel"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -17,7 +17,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useProject } from "@/hooks/use-teams"
-import { useProjectRepos, useUpdateRepoIntegration } from "@/hooks/use-settings"
+import {
+  useProjectReposPage,
+  useUpdateRepoIntegration,
+} from "@/hooks/use-settings"
 
 export const Route = createFileRoute("/teams/$teamId/projects/$projectId/")({
   component: ProjectDetailPage,
@@ -26,12 +29,11 @@ export const Route = createFileRoute("/teams/$teamId/projects/$projectId/")({
 function ProjectDetailPage() {
   const { teamId, projectId } = Route.useParams()
   const project = useProject(teamId, projectId)
-  const repos = useProjectRepos(teamId, projectId)
+  const [repoPage, setRepoPage] = useState(1)
+  const repos = useProjectReposPage(teamId, projectId, { page: repoPage })
   const updateRepo = useUpdateRepoIntegration(teamId, projectId)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogSession, setDialogSession] = useState(0)
-
-  const repoList = repos.data ?? []
 
   function openCreate() {
     setDialogSession((session) => session + 1)
@@ -57,56 +59,67 @@ function ProjectDetailPage() {
         </Button>
       }
     >
-      <DataPanel loading={project.isPending || repos.isPending} error={project.isError || repos.isError}>
-        <RepoIntegrationDialog
-          teamId={teamId}
-          projectId={projectId}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          repo={null}
-          sessionKey={dialogSession}
-        />
+      <PaginatedListPanel
+        query={repos}
+        page={repoPage}
+        onPageChange={setRepoPage}
+      >
+        {(repoList) => (
+          <>
+            <RepoIntegrationDialog
+              teamId={teamId}
+              projectId={projectId}
+              open={dialogOpen}
+              onOpenChange={setDialogOpen}
+              repo={null}
+              sessionKey={dialogSession}
+            />
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Repository</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>LLM</TableHead>
-              <TableHead className="w-20 text-right">Enabled</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {repoList.length ? (
-              repoList.map((repo) => (
-                <TableRow key={repo.id}>
-                  <TableCell>
-                    <Link
-                      to="/teams/$teamId/projects/$projectId/repos/$repoId"
-                      params={{ teamId, projectId, repoId: repo.id }}
-                      className="font-medium hover:underline"
-                    >
-                      {repo.repo_full_name || repo.name || "All repositories"}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{repo.git_provider}</TableCell>
-                  <TableCell>{repo.llm_provider_name ?? "Org default"}</TableCell>
-                  <TableCell className="text-right">
-                    <Switch
-                      checked={repo.enabled}
-                      onCheckedChange={(enabled) => toggleEnabled(repo.id, enabled)}
-                    />
-                  </TableCell>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Repository</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>LLM</TableHead>
+                  <TableHead className="w-20 text-right">Enabled</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <EmptyState colSpan={4}>
-                No repositories yet. Click &quot;Add repository&quot; to get started.
-              </EmptyState>
-            )}
-          </TableBody>
-        </Table>
-      </DataPanel>
+              </TableHeader>
+              <TableBody>
+                {repoList.length ? (
+                  repoList.map((repo) => (
+                    <TableRow key={repo.id}>
+                      <TableCell>
+                        <Link
+                          to="/teams/$teamId/projects/$projectId/repos/$repoId"
+                          params={{ teamId, projectId, repoId: repo.id }}
+                          className="font-medium hover:underline"
+                        >
+                          {repo.repo_full_name || repo.name || "All repositories"}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{repo.git_provider}</TableCell>
+                      <TableCell>{repo.llm_provider_name ?? "Org default"}</TableCell>
+                      <TableCell className="text-right">
+                        <Switch
+                          checked={repo.enabled}
+                          disabled={updateRepo.isPending}
+                          onCheckedChange={(enabled) =>
+                            void toggleEnabled(repo.id, enabled)
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <EmptyState colSpan={4}>
+                    No repositories in this project yet.
+                  </EmptyState>
+                )}
+              </TableBody>
+            </Table>
+          </>
+        )}
+      </PaginatedListPanel>
     </AppShell>
   )
 }
