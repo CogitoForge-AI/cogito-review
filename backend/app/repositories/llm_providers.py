@@ -138,7 +138,7 @@ class LlmProviderRepository:
                 model = $6,
                 opencode_model = $7,
                 is_default = $8,
-                enabled = $9,
+                enabled = $10,
                 updated_at = now()
             WHERE id = $1
             RETURNING id, name, provider_id, base_url, api_token, model,
@@ -152,8 +152,8 @@ class LlmProviderRepository:
             model if model is not None else current.model,
             opencode_model if opencode_model is not None else current.opencode_model,
             is_default if is_default is not None else current.is_default,
-            enabled if enabled is not None else current.enabled,
             clear_api_token,
+            enabled if enabled is not None else current.enabled,
         )
         if row is None:
             msg = "failed to update llm provider"
