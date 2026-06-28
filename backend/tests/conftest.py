@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
+import pytest_asyncio
 
 from app.rbac.catalog import ActionKey, RoleKey
 from app.rbac.models import EffectivePermissions, TeamRoleAssignment
@@ -112,6 +113,16 @@ def make_effective_permissions(
         team_memberships=memberships,
         team_actions=team_actions,
     )
+
+
+@pytest_asyncio.fixture
+async def db_conn():
+    from app.main import create_app
+
+    app = create_app()
+    async with app.router.lifespan_context(app):
+        async with app.state.pool.acquire() as conn:
+            yield conn
 
 
 def pytest_configure(config: pytest.Config) -> None:
