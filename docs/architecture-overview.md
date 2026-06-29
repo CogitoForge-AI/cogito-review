@@ -166,7 +166,8 @@ Ephemeral or semi-persistent git workspace state:
 - backend is the source of truth for application state
 - agent communicates by callback, not direct database access
 - permissions are enforced server-side
-- runtime abstraction exists, but Docker is the only implemented review runtime today
+- runtime abstraction is execution-only; repository workspace preparation and
+  review execution belong entirely to the agent runtime
 
 ## Current maturity notes
 

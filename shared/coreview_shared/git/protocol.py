@@ -9,7 +9,6 @@ from coreview_shared.git.models import (
 )
 from coreview_shared.review import PRContext, PRMetadata
 from coreview_shared.workspace.models import WorkspaceSpec
-from coreview_shared.workspace.protocol import CommandRunner
 
 
 class GitProvider(Protocol):
@@ -28,13 +27,11 @@ class GitProvider(Protocol):
         self,
         spec: WorkspaceSpec,
         repo_base: Path,
-        runner: CommandRunner,
     ) -> PreparedReview: ...
 
     async def cleanup_review(
         self,
         review: PreparedReview,
-        runner: CommandRunner,
     ) -> None: ...
 
     async def get_pr_metadata(

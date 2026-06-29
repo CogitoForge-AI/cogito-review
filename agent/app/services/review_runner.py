@@ -7,7 +7,6 @@ from coreview_shared.git.models import (
 )
 from coreview_shared.llm.opencode import OpenCodeLLMProvider
 from coreview_shared.review import ReviewFinding
-from coreview_shared.runtime.command_runner import LocalCommandRunner
 from coreview_shared.schemas.review_callback import (
     ReviewCallbackError,
     ReviewCallbackGithubResult,
@@ -69,7 +68,6 @@ async def execute_review_logic(review_id: str) -> None:
 
     callback = ReviewCallbackClient.from_settings(infra)
     prepared_review: PreparedReview | None = None
-    runner = LocalCommandRunner()
     providers = None
     try:
         providers = build_providers_from_env(infra)
@@ -91,7 +89,7 @@ async def execute_review_logic(review_id: str) -> None:
             infra.repo_full_name,
         )
         logger.info("Review %s: preparing review workspace at %s", review_id, repo_base)
-        prepared_review = await providers.git.prepare_review(spec, repo_base, runner)
+        prepared_review = await providers.git.prepare_review(spec, repo_base)
         prepared_review = _with_ci_summary(prepared_review, ci_summary)
         pr_context = prepared_review.context
         request = request_from_metadata(pr_context.metadata, infra.git_provider)
@@ -178,7 +176,7 @@ async def execute_review_logic(review_id: str) -> None:
     finally:
         if prepared_review is not None and providers is not None:
             try:
-                await providers.git.cleanup_review(prepared_review, runner)
+                await providers.git.cleanup_review(prepared_review)
             except Exception:
                 logger.exception(
                     "Failed to cleanup worktree %s",

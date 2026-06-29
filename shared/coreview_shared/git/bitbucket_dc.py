@@ -15,9 +15,8 @@ from coreview_shared.git.models import (
     WebhookEvent,
 )
 from coreview_shared.review import PRContext, PRMetadata
-from coreview_shared.workspace.adapter import GitWorkspaceAdapter
+from coreview_shared.workspace.git_workspace import GitWorkspace
 from coreview_shared.workspace.models import WorkspaceSpec
-from coreview_shared.workspace.protocol import CommandRunner
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +41,11 @@ class BitbucketDataCenterProvider:
         token: str,
         *,
         base_url: str,
-        workspace_adapter: GitWorkspaceAdapter | None = None,
+        git_workspace: GitWorkspace | None = None,
     ) -> None:
         self._token = token
         self._base_url = normalize_base_url(base_url)
-        self._workspace_adapter = workspace_adapter or GitWorkspaceAdapter()
+        self._git_workspace = git_workspace or GitWorkspace()
 
     def _api_base(self) -> str:
         return f"{self._base_url}/rest/api/latest"
@@ -188,7 +187,6 @@ class BitbucketDataCenterProvider:
         self,
         spec: WorkspaceSpec,
         repo_base: Path,
-        runner: CommandRunner,
     ) -> PreparedReview:
         metadata = await self.get_pr_metadata(spec.repo_full_name, spec.pr_number)
         if spec.head_sha and metadata.head_sha != spec.head_sha:
@@ -199,13 +197,12 @@ class BitbucketDataCenterProvider:
             )
 
         access = self._remote_access(spec.repo_full_name)
-        prepared_workspace = await self._workspace_adapter.prepare_workspace(
+        prepared_workspace = await self._git_workspace.prepare_workspace(
             spec,
             repo_base,
-            runner,
             access,
         )
-        diff = await self._workspace_adapter.build_diff(
+        diff = await self._git_workspace.build_diff(
             prepared_workspace,
             base_sha=metadata.base_sha,
             head_sha=metadata.head_sha,
@@ -219,11 +216,9 @@ class BitbucketDataCenterProvider:
     async def cleanup_review(
         self,
         review: PreparedReview,
-        runner: CommandRunner,
     ) -> None:
-        await self._workspace_adapter.cleanup_workspace(
+        await self._git_workspace.cleanup_workspace(
             review.workspace,
-            runner,
             review.remote_access,
         )
 
@@ -290,12 +285,10 @@ class BitbucketDataCenterProvider:
         self,
         spec: WorkspaceSpec,
         repo_base: Path,
-        runner: CommandRunner,
     ) -> Path:
-        prepared_workspace = await self._workspace_adapter.prepare_workspace(
+        prepared_workspace = await self._git_workspace.prepare_workspace(
             spec,
             repo_base,
-            runner,
             self._remote_access(spec.repo_full_name),
         )
         return prepared_workspace.worktree_path

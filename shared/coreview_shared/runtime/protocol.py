@@ -4,16 +4,15 @@ from coreview_shared.schemas.execution_contracts import (
     ExecutionSubmissionResult,
     ReviewExecutionRequest,
 )
-from coreview_shared.workspace.models import Workspace, WorkspaceSpec
-from coreview_shared.workspace.protocol import CommandRunner
 
 
 class RuntimeProvider(Protocol):
-    async def prepare_workspace(self, spec: WorkspaceSpec) -> Workspace: ...
+    """Execution backend contract used by the backend worker.
 
-    async def cleanup_workspace(self, workspace: Workspace) -> None: ...
-
-    def command_runner(self) -> CommandRunner: ...
+    Runtime providers only submit review execution to a backend. Repository
+    workspace preparation, local Git commands, and cleanup are owned by the
+    agent runtime once the backend launches it.
+    """
 
     async def submit_execution(
         self, request: ReviewExecutionRequest

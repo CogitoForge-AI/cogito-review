@@ -123,4 +123,18 @@ Today the executor is primarily used by the Docker runtime path:
 - runtime provider spawns the agent container
 - agent calls back into the backend API
 
+The runtime layer does not prepare mirrors, worktrees, or diffs on the
+agent's behalf. The executor owns the full repository-local workflow inside the
+agent runtime:
+
+- prepare the shared mirror and per-review worktree
+- gather CI context
+- run the review model
+- publish findings
+- clean up the review worktree
+
+Git execution is local to the agent process. The workspace package now uses a
+concrete local Git executor inside the agent runtime rather than passing a
+cross-runtime command runner abstraction through backend or runtime layers.
+
 The runtime abstraction also includes a Kubernetes provider, but Kubernetes review execution is not implemented yet.

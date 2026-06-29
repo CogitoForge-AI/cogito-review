@@ -229,4 +229,4 @@ def test_build_providers_docker_runtime(mock_get_client: MagicMock) -> None:
         infra=CodeReviewSettings(runtime_provider="docker"),
         app_settings=Settings(),
     )
-    assert runtime.command_runner() is not None
+    assert isinstance(runtime, DockerRuntimeProvider)

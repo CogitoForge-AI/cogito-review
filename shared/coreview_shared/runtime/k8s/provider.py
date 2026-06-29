@@ -1,11 +1,10 @@
-"""Kubernetes runtime provider with local workspace setup and CRD submission."""
+"""Kubernetes runtime provider that submits agent execution intent."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 from coreview_shared.runtime.execution.crd_serialize import (
@@ -20,8 +19,6 @@ from coreview_shared.schemas.execution_contracts import (
     ReviewExecutionRequest,
     SecretRef,
 )
-from coreview_shared.workspace.models import Workspace, WorkspaceSpec
-from coreview_shared.workspace.protocol import CommandRunner
 
 logger = logging.getLogger(__name__)
 
@@ -41,22 +38,12 @@ class K8sRuntimeProvider:
         k8s_agent_config_configmap: str = "opencode-config",
         kubeconfig_path: str = "",
     ) -> None:
-        self._workspace_root = Path(workspace_root)
+        self._workspace_root = workspace_root
         self._agent_image = agent_image
         self._database_url = database_url
         self._k8s_namespace = k8s_namespace
         self._k8s_agent_config_configmap = k8s_agent_config_configmap
         self._kubeconfig_path = kubeconfig_path
-
-    async def prepare_workspace(self, spec: WorkspaceSpec) -> Workspace:
-        return await asyncio.to_thread(self._prepare_workspace_sync, spec)
-
-    async def cleanup_workspace(self, workspace: Workspace) -> None:
-        await asyncio.to_thread(self._cleanup_sync, workspace.path)
-
-    def command_runner(self) -> CommandRunner:
-        msg = "K8s runtime command_runner not implemented yet"
-        raise NotImplementedError(msg)
 
     async def submit_execution(
         self, request: ReviewExecutionRequest
@@ -87,13 +74,6 @@ class K8sRuntimeProvider:
             external_ref=external_ref,
             waits_for_completion=False,
         )
-
-    def _prepare_workspace_sync(self, spec: WorkspaceSpec) -> Workspace:
-        self._workspace_root.mkdir(parents=True, exist_ok=True)
-        return Workspace(path=self._workspace_root, spec=spec)
-
-    def _cleanup_sync(self, path: Path) -> None:
-        del path
 
     def _submit_sync(
         self,

@@ -91,13 +91,10 @@ def _build_runtime(
         msg = f"Unsupported runtime provider: {cfg.runtime_provider}"
         raise NotImplementedError(msg)
 
-    git_image = cfg.git_image or cfg.workspace_image or "alpine/git:latest"
-
     if runtime_cls is DockerRuntimeProvider:
         return DockerRuntimeProvider(
             workspace_root=cfg.workspace_root,
             docker_host=cfg.docker_host or None,
-            git_image=git_image,
             agent_image=cfg.agent_image,
             agent_network=(cfg.agent_network or "").strip() or None,
             database_url=database_url,
