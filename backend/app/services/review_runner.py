@@ -1,8 +1,7 @@
 import logging
 
-import asyncpg
-
 from app.config import get_code_review_settings, get_settings
+from app.database import run_with_connection
 from app.providers.factory import build_runtime_provider
 from app.services.review_job_prepare import prepare_review_execution
 
@@ -17,11 +16,7 @@ async def dispatch_review_job(review_id: str) -> bool:
     """
     settings = get_settings()
     infra = get_code_review_settings()
-    conn = await asyncpg.connect(settings.database_url)
-    try:
-        request = await prepare_review_execution(conn, review_id)
-    finally:
-        await conn.close()
+    request = await run_with_connection(prepare_review_execution, review_id)
 
     runtime = build_runtime_provider(infra=infra, app_settings=settings)
     result = await runtime.submit_execution(request)

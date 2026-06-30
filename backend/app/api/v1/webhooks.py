@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.v1.reviews import _to_review_response
+from app.config import get_code_review_settings
 from app.dependencies import get_conn
 from app.jobs.review import run_review
 from app.providers.factory import build_providers
@@ -18,6 +19,7 @@ from app.services.provider_resolution import (
     build_review_runtime_config,
     resolve_llm_provider_for_repo,
 )
+from app.services.review_state import is_review_stale
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +162,21 @@ async def _enqueue_webhook_review(
         event.head_sha,
     )
     if existing:
+        if is_review_stale(
+            existing,
+            timeout_seconds=get_code_review_settings().review_timeout_seconds,
+        ):
+            recovered = await repo_db.reset_for_retry(existing.id)
+            if recovered is not None:
+                run_review.delay(str(recovered.id))
+                logger.warning(
+                    "Recovered stale review %s for %s#%s at %s",
+                    recovered.id,
+                    event.repo_full_name,
+                    event.pr_number,
+                    event.head_sha,
+                )
+                return _to_review_response(recovered)
         return _to_review_response(existing)
 
     review = await repo_db.create(
