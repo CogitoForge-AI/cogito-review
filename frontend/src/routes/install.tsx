@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { api } from "@/api/client"
 import { Field } from "@/components/forms/Field"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useInstallBootstrap, useInstallStatus } from "@/hooks/use-install"
 import { defaultLoginSearch } from "@/hooks/use-auth"
@@ -61,16 +62,21 @@ function InstallPage() {
 
   return (
     <div className="bg-background flex min-h-svh items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-lg font-semibold">Install Cogito Review</h1>
+      <div className="w-full max-w-md space-y-5">
+        <div className="space-y-1.5 text-center">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Cogito Review
+          </p>
+          <h1 className="text-xl font-semibold tracking-tight">Install</h1>
           <p className="text-muted-foreground text-sm">
             Create the initial super administrator account. This step runs once
             and cannot be repeated.
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <Card className="border-border/70 shadow-sm">
+          <CardContent className="p-6">
+            <form className="space-y-3" onSubmit={handleSubmit}>
           <Field label="Username">
             <Input
               value={username}
@@ -119,19 +125,23 @@ function InstallPage() {
             />
           </Field>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={
-              bootstrap.isPending ||
-              !username.trim() ||
-              !password ||
-              !confirmPassword
-            }
-          >
-            Complete setup
-          </Button>
-        </form>
+          <div className="pt-1">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={
+                bootstrap.isPending ||
+                !username.trim() ||
+                !password ||
+                !confirmPassword
+              }
+            >
+              Complete setup
+            </Button>
+          </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { toast } from "sonner"
 
 import { Field } from "@/components/forms/Field"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { loginUrl } from "@/hooks/use-auth"
 import { useLocalLogin } from "@/hooks/use-install"
@@ -17,6 +18,17 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 })
 
+function AuthDivider() {
+  return (
+    <div className="relative py-1">
+      <div className="border-border/70 absolute inset-x-0 top-1/2 border-t" />
+      <p className="text-muted-foreground relative mx-auto w-fit bg-card px-3 text-xs">
+        Or sign in locally
+      </p>
+    </div>
+  )
+}
+
 function LoginPage() {
   const navigate = useNavigate()
   const { return_to: returnTo, error } = Route.useSearch()
@@ -28,6 +40,8 @@ function LoginPage() {
   const [showLocal, setShowLocal] = useState(false)
 
   const ssoEnabled = idp.data?.enabled ?? false
+  const localOnly = !ssoEnabled || error === "idp_not_configured"
+  const showLocalForm = showLocal || localOnly
   const buttonLabel =
     ssoEnabled && idp.data?.display_name
       ? `Continue with ${idp.data.display_name}`
@@ -45,64 +59,77 @@ function LoginPage() {
 
   return (
     <div className="bg-background flex min-h-svh items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-lg font-semibold">Sign in to Cogito Review</h1>
+      <div className="w-full max-w-sm space-y-5">
+        <div className="space-y-1.5 text-center">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Cogito Review
+          </p>
+          <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
           {error === "idp_not_configured" ? (
             <p className="text-destructive text-sm">
-              SSO is not configured. Sign in with your local administrator account.
+              SSO is not configured. Use your local administrator account.
             </p>
           ) : (
             <p className="text-muted-foreground text-sm">
-              Use SSO or your local administrator account.
+              {ssoEnabled
+                ? "Use SSO or your local administrator account."
+                : "Sign in with your local administrator account."}
             </p>
           )}
         </div>
 
-        {ssoEnabled ? (
-          <Button asChild className="w-full">
-            <a href={loginUrl(returnTo ?? "/")}>{buttonLabel}</a>
-          </Button>
-        ) : null}
+        <Card className="border-border/70 shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            {ssoEnabled ? (
+              <Button asChild className="w-full">
+                <a href={loginUrl(returnTo ?? "/")}>{buttonLabel}</a>
+              </Button>
+            ) : null}
 
-        {showLocal || !ssoEnabled ? (
-          <form className="space-y-4" onSubmit={handleLocalSubmit}>
-            <Field label="Username">
-              <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                required
-              />
-            </Field>
-            <Field label="Password">
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </Field>
-            <Button
-              type="submit"
-              className="w-full"
-              variant={ssoEnabled ? "outline" : "default"}
-              disabled={localLogin.isPending}
-            >
-              Sign in locally
-            </Button>
-          </form>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => setShowLocal(true)}
-          >
-            Local administrator sign-in
-          </Button>
-        )}
+            {ssoEnabled && showLocalForm ? <AuthDivider /> : null}
+
+            {showLocalForm ? (
+              <form className="space-y-3" onSubmit={handleLocalSubmit}>
+                <Field label="Username">
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    placeholder="admin"
+                    required
+                  />
+                </Field>
+                <Field label="Password">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                </Field>
+                <div className="pt-1">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={localLogin.isPending}
+                  >
+                    Sign in locally
+                  </Button>
+                </div>
+              </form>
+            ) : ssoEnabled ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-muted-foreground w-full"
+                onClick={() => setShowLocal(true)}
+              >
+                Local administrator sign-in
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

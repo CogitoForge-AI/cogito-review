@@ -149,5 +149,6 @@ For deeper technical and operational details:
 - [Kubernetes integration](docs/kubernetes.md)
 - [Security model](docs/security.md)
 - [RBAC model](docs/rbac.md)
+- [User management functional specification](docs/user-management.md)
 - [Architecture overview](docs/architecture-overview.md)
 - [Operator guide](operator/README.md)

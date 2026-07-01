@@ -192,8 +192,45 @@ async def add_team_member(
     )
 
 
+async def update_team_member_role(
+    conn,
+    team_id: UUID,
+    user_id: UUID,
+    *,
+    role: str,
+) -> TeamMemberResponse:
+    repo = TeamMemberRepository(conn)
+    member = await repo.get(team_id, user_id)
+    if member is None:
+        msg = "team member not found"
+        raise ValueError(msg)
+    if member.role == "team_admin" and role != "team_admin":
+        admin_count = await repo.count_team_admins(team_id)
+        if admin_count <= 1:
+            msg = "Cannot remove the last team administrator"
+            raise ValueError(msg)
+    row = await repo.add(team_id=team_id, user_id=user_id, role=role)
+    return TeamMemberResponse(
+        team_id=row.team_id,
+        user_id=row.user_id,
+        role=row.role,
+        user_email=row.user_email,
+        user_name=row.user_name,
+        created_at=row.created_at,
+    )
+
+
 async def remove_team_member(conn, team_id: UUID, user_id: UUID) -> None:
-    await TeamMemberRepository(conn).remove(team_id, user_id)
+    repo = TeamMemberRepository(conn)
+    member = await repo.get(team_id, user_id)
+    if member is None:
+        return
+    if member.role == "team_admin":
+        admin_count = await repo.count_team_admins(team_id)
+        if admin_count <= 1:
+            msg = "Cannot remove the last team administrator"
+            raise ValueError(msg)
+    await repo.remove(team_id, user_id)
 
 
 async def list_users(conn) -> list:

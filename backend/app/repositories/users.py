@@ -15,6 +15,8 @@ class UserRow:
     auth_source: str
     username: str | None
     is_superuser: bool
+    is_active: bool
+    last_login_at: datetime | None
     created_at: datetime
 
 
@@ -28,7 +30,9 @@ class UserListRow:
     auth_source: str
     username: str | None
     is_superuser: bool
+    is_active: bool
     team_names: str
+    team_count: int
     created_at: datetime
 
 
@@ -41,15 +45,24 @@ class LocalUserCredentials:
     is_org_admin: bool
 
 
+@dataclass(frozen=True, slots=True)
+class UserListFilters:
+    search: str = ""
+    auth_source: str | None = None
+    org_role: str | None = None
+    status: str | None = None
+    team_id: UUID | None = None
+
+
 _USER_SELECT = """
     id, oidc_sub, email, name, is_org_admin,
-    auth_source, username, is_superuser, created_at
+    auth_source, username, is_superuser, is_active, last_login_at, created_at
 """
 
 
 _USER_LIST_SELECT = """
     u.id, u.oidc_sub, u.email, u.name, u.is_org_admin,
-    u.auth_source, u.username, u.is_superuser, u.created_at,
+    u.auth_source, u.username, u.is_superuser, u.is_active, u.created_at,
     COALESCE(
         (
             SELECT string_agg(t.name, ', ' ORDER BY t.name)
@@ -58,8 +71,58 @@ _USER_LIST_SELECT = """
             WHERE tm.user_id = u.id
         ),
         ''
-    ) AS team_names
+    ) AS team_names,
+    COALESCE(
+        (
+            SELECT COUNT(*)::int
+            FROM team_members tm
+            WHERE tm.user_id = u.id
+        ),
+        0
+    ) AS team_count
 """
+
+
+def _list_where_clause(filters: UserListFilters) -> tuple[str, list[object]]:
+    conditions: list[str] = []
+    params: list[object] = []
+    index = 1
+
+    if filters.search:
+        pattern = f"%{filters.search}%"
+        conditions.append(
+            f"(u.email ILIKE ${index} OR u.name ILIKE ${index} "
+            f"OR COALESCE(u.username, '') ILIKE ${index})"
+        )
+        params.append(pattern)
+        index += 1
+
+    if filters.auth_source:
+        conditions.append(f"u.auth_source = ${index}")
+        params.append(filters.auth_source)
+        index += 1
+
+    if filters.org_role == "org_admin":
+        conditions.append("u.is_org_admin = true")
+    elif filters.org_role == "org_member":
+        conditions.append("u.is_org_admin = false")
+
+    if filters.status == "active":
+        conditions.append("u.is_active = true")
+    elif filters.status == "deactivated":
+        conditions.append("u.is_active = false")
+
+    if filters.team_id is not None:
+        conditions.append(
+            f"EXISTS (SELECT 1 FROM team_members tm "
+            f"WHERE tm.user_id = u.id AND tm.team_id = ${index})"
+        )
+        params.append(filters.team_id)
+        index += 1
+
+    if not conditions:
+        return "", params
+    return " WHERE " + " AND ".join(conditions), params
 
 
 class UserRepository:
@@ -129,57 +192,64 @@ class UserRepository:
     async def list_paginated(
         self,
         *,
-        search: str,
+        filters: UserListFilters,
         limit: int,
         offset: int,
     ) -> list[UserListRow]:
-        if search:
-            pattern = f"%{search}%"
-            rows = await self._conn.fetch(
-                f"""
-                SELECT {_USER_LIST_SELECT}
-                FROM users u
-                WHERE u.email ILIKE $1
-                   OR u.name ILIKE $1
-                   OR COALESCE(u.username, '') ILIKE $1
-                ORDER BY u.email ASC
-                LIMIT $2 OFFSET $3
-                """,
-                pattern,
-                limit,
-                offset,
-            )
-        else:
-            rows = await self._conn.fetch(
-                f"""
-                SELECT {_USER_LIST_SELECT}
-                FROM users u
-                ORDER BY u.email ASC
-                LIMIT $1 OFFSET $2
-                """,
-                limit,
-                offset,
-            )
+        where_sql, params = _list_where_clause(filters)
+        limit_index = len(params) + 1
+        offset_index = len(params) + 2
+        rows = await self._conn.fetch(
+            f"""
+            SELECT {_USER_LIST_SELECT}
+            FROM users u
+            {where_sql}
+            ORDER BY u.email ASC
+            LIMIT ${limit_index} OFFSET ${offset_index}
+            """,
+            *params,
+            limit,
+            offset,
+        )
         return [_row_to_list_user(row) for row in rows]
 
-    async def count(self, *, search: str) -> int:
-        if search:
-            pattern = f"%{search}%"
-            return await self._conn.fetchval(
-                """
-                SELECT COUNT(*)::int FROM users u
-                WHERE u.email ILIKE $1
-                   OR u.name ILIKE $1
-                   OR COALESCE(u.username, '') ILIKE $1
-                """,
-                pattern,
-            )
-        return await self._conn.fetchval("SELECT COUNT(*)::int FROM users")
+    async def count(self, *, filters: UserListFilters) -> int:
+        where_sql, params = _list_where_clause(filters)
+        return await self._conn.fetchval(
+            f"SELECT COUNT(*)::int FROM users u {where_sql}",
+            *params,
+        )
 
     async def count_org_admins(self) -> int:
         return await self._conn.fetchval(
             "SELECT COUNT(*)::int FROM users WHERE is_org_admin = true"
         )
+
+    async def count_active_org_admins(self) -> int:
+        return await self._conn.fetchval(
+            """
+            SELECT COUNT(*)::int FROM users
+            WHERE is_org_admin = true AND is_active = true
+            """
+        )
+
+    async def record_login(self, user_id: UUID) -> None:
+        await self._conn.execute(
+            "UPDATE users SET last_login_at = now() WHERE id = $1",
+            user_id,
+        )
+
+    async def set_active(self, user_id: UUID, *, is_active: bool) -> UserRow | None:
+        row = await self._conn.fetchrow(
+            f"""
+            UPDATE users SET is_active = $2
+            WHERE id = $1
+            RETURNING {_USER_SELECT}
+            """,
+            user_id,
+            is_active,
+        )
+        return _row_to_user(row) if row else None
 
     async def create_local_superuser(
         self,
@@ -293,7 +363,9 @@ def _row_to_list_user(row: asyncpg.Record) -> UserListRow:
         auth_source=row.get("auth_source", "sso"),
         username=row.get("username"),
         is_superuser=row.get("is_superuser", False),
+        is_active=row.get("is_active", True),
         team_names=row.get("team_names") or "",
+        team_count=row.get("team_count") or 0,
         created_at=row["created_at"],
     )
 
@@ -308,5 +380,7 @@ def _row_to_user(row: asyncpg.Record) -> UserRow:
         auth_source=row.get("auth_source", "sso"),
         username=row.get("username"),
         is_superuser=row.get("is_superuser", False),
+        is_active=row.get("is_active", True),
+        last_login_at=row.get("last_login_at"),
         created_at=row["created_at"],
     )
