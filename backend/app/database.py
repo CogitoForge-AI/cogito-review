@@ -58,3 +58,7 @@ async def run_with_connection(fn: Any, *args: Any, **kwargs: Any) -> Any:
 
 def run_db(coro: Coroutine[Any, Any, T]) -> T:
     return asyncio.run(coro)
+
+
+def run_db_fn(fn: Any, *args: Any, **kwargs: Any) -> Any:
+    return asyncio.run(_run_with_conn(fn, *args, **kwargs))

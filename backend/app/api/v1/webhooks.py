@@ -11,6 +11,7 @@ from app.api.v1.reviews import _to_review_response
 from app.config import get_code_review_settings
 from app.dependencies import get_conn
 from app.jobs.review import run_review
+from app.observability.metrics import record_webhook_event
 from app.providers.factory import build_providers
 from app.repositories.repo_integrations import RepoIntegrationRepository
 from app.repositories.reviews import ReviewRepository
@@ -20,6 +21,7 @@ from app.services.provider_resolution import (
     resolve_llm_provider_for_repo,
 )
 from app.services.review_state import is_review_stale
+from app.services.review_analytics_events import ingest_provider_analytics_event
 
 logger = logging.getLogger(__name__)
 
@@ -111,11 +113,13 @@ async def _enqueue_webhook_review(
     repo_integration, team_id = resolved
 
     if not repo_integration.enabled:
+        record_webhook_event(expected_git_provider, "ignored")
         return JSONResponse(
             status_code=202,
             content={"detail": "repository not configured for review"},
         )
     if repo_integration.git_provider != expected_git_provider:
+        record_webhook_event(expected_git_provider, "ignored")
         return JSONResponse(
             status_code=202,
             content={"detail": "repository not configured for review"},
@@ -124,15 +128,12 @@ async def _enqueue_webhook_review(
     _assert_repo_matches_integration(repo_integration, repo_full_name)
 
     llm_provider = await resolve_llm_provider_for_repo(conn, repo_integration)
-    if llm_provider is None:
-        return JSONResponse(
-            status_code=202,
-            content={"detail": "no LLM provider configured"},
-        )
-
-    providers = build_providers(
-        build_review_runtime_config(repo_integration, llm_provider)
+    runtime_config = build_review_runtime_config(
+        repo_integration,
+        llm_provider or _dummy_llm_provider(),
     )
+
+    providers = build_providers(runtime_config)
 
     webhook_secret = webhook_secret_resolver(repo_integration)
     if not providers.git.verify_webhook_signature(
@@ -141,19 +142,54 @@ async def _enqueue_webhook_review(
         webhook_secret,
         headers=headers,
     ):
+        record_webhook_event(expected_git_provider, "auth_failed")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid webhook signature",
         )
 
+    analytics_events_ingested = 0
+    try:
+        analytics_events_ingested = await ingest_provider_analytics_event(
+            conn,
+            repo_integration=repo_integration,
+            body=body,
+            headers=headers,
+        )
+    except NotImplementedError:
+        analytics_events_ingested = 0
+
+    if llm_provider is None:
+        event = providers.git.parse_webhook(headers, body)
+        if event is None:
+            outcome = "analytics_only" if analytics_events_ingested else "ignored"
+            record_webhook_event(expected_git_provider, outcome)
+            detail = (
+                "analytics event recorded"
+                if analytics_events_ingested
+                else "event ignored"
+            )
+            return JSONResponse(status_code=202, content={"detail": detail})
+        record_webhook_event(expected_git_provider, "no_llm")
+        return JSONResponse(
+            status_code=202,
+            content={"detail": "no LLM provider configured"},
+        )
+
     event = providers.git.parse_webhook(headers, body)
     if event is None:
-        return JSONResponse(status_code=202, content={"detail": "event ignored"})
+        outcome = "analytics_only" if analytics_events_ingested else "ignored"
+        record_webhook_event(expected_git_provider, outcome)
+        detail = (
+            "analytics event recorded" if analytics_events_ingested else "event ignored"
+        )
+        return JSONResponse(status_code=202, content={"detail": detail})
 
     repo_db = ReviewRepository(conn)
     if event.delivery_id:
         existing = await repo_db.get_by_delivery_id(event.delivery_id)
         if existing:
+            record_webhook_event(expected_git_provider, "deduped")
             return _to_review_response(existing)
 
     existing = await repo_db.get_by_repo_pr_sha(
@@ -177,6 +213,7 @@ async def _enqueue_webhook_review(
                     event.head_sha,
                 )
                 return _to_review_response(recovered)
+        record_webhook_event(expected_git_provider, "deduped")
         return _to_review_response(existing)
 
     review = await repo_db.create(
@@ -193,6 +230,7 @@ async def _enqueue_webhook_review(
     )
 
     run_review.delay(str(review.id))
+    record_webhook_event(expected_git_provider, "enqueued")
     logger.info(
         "Enqueued review %s for %s#%s (integration %s)",
         review.id,
@@ -201,6 +239,18 @@ async def _enqueue_webhook_review(
         repo_integration.id,
     )
     return _to_review_response(review)
+
+
+class _DummyLlmProvider:
+    provider_id = "analytics"
+    base_url = ""
+    api_token = ""
+    model = ""
+    opencode_model = ""
+
+
+def _dummy_llm_provider() -> _DummyLlmProvider:
+    return _DummyLlmProvider()
 
 
 @router.post(

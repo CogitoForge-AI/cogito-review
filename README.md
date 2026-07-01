@@ -1,3 +1,8 @@
+> [!WARNING]
+> Cogito Review is currently under active development and is not production-ready yet.
+> Expect breaking changes, incomplete features, and operational gaps while the project is evolving.
+
+
 # Cogito Review
 
 [![CI](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/ci.yml/badge.svg)](https://github.com/CogitoForge-AI/cogito-review/actions/workflows/ci.yml)
@@ -8,11 +13,7 @@
 
 AI-assisted code review platform for pull requests and merge requests.
 
-Cogito Review helps teams review code faster with automated, structured feedback on pull requests and merge requests. Connect your repository, configure your model provider, and let the system surface findings your reviewers can act on quickly.
-
-> [!WARNING]
-> Cogito Review is currently under active development and is not production-ready yet.
-> Expect breaking changes, incomplete features, and operational gaps while the project is evolving.
+Cogito Review helps teams review code faster with automated, structured feedback on pull requests and merge requests. The platform is designed to run entirely as containers, with native Docker deployment for self-hosting and a Kubernetes-native integration path built around a dedicated operator.
 
 ## Why teams use Cogito Review
 
@@ -22,6 +23,7 @@ Cogito Review helps teams review code faster with automated, structured feedback
 - Choose your own OpenAI-compatible model provider
 - Use one system across multiple repositories and teams
 - Self-host the product in your own environment
+- Deploy the full stack with container-native workflows on Docker or Kubernetes
 
 ## Features
 
@@ -33,12 +35,43 @@ Cogito Review helps teams review code faster with automated, structured feedback
 - SSO and RBAC support
 - Review retry support
 - Multi-provider Git integration
+- Container-first architecture with separate backend, agent, and operator images
+- Native Docker deployment and Kubernetes-native operator integration
+
+## Showcase
+
+| Analytics overview | Review findings |
+| --- | --- |
+| ![Analytics overview dashboard](screenshots/analytics-1.png) | ![Review findings screen](screenshots/review-findings.png) |
+| Analytics trends | Git providers |
+| ![Analytics trends dashboard](screenshots/analytics-2.png) | ![Git providers settings](screenshots/git-providers.png) |
+| LLM providers | SSO providers |
+| ![LLM providers settings](screenshots/llm-providers.png) | ![SSO providers settings](screenshots/sso-providers.png) |
+| RBAC |  |
+| ![RBAC screen](screenshots/rbac.png) |  |
 
 ## Supported integrations
 
 - Git providers: GitHub, GitLab, Azure DevOps, Bitbucket Cloud, Bitbucket Data Center
 - Identity: OIDC, SAML 2.0, and local bootstrap login
 - LLM providers: OpenAI-compatible endpoints
+
+## Deployment model
+
+Cogito Review is built as a container-first system. The application stack, review agent, and Kubernetes operator are shipped as separate container images so the platform can fit both simple self-hosted Docker environments and Kubernetes-native platform setups.
+
+### Native Docker
+
+- Run the full stack with Docker Compose
+- Keep the API, worker, database dependencies, and review agent flow inside a container-based deployment model
+- Use the fastest path for local evaluation and straightforward self-hosting
+
+### Native Kubernetes
+
+- Deploy the platform with Kubernetes manifests in `deploy/k8s/`
+- Integrate through the dedicated Cogito Review Kubernetes Operator in `operator/`
+- Manage installation and platform resources through Kubernetes-native APIs and CRDs
+- Align the deployment model with cluster-native operations and GitOps workflows
 
 ## Quick start
 
@@ -73,6 +106,28 @@ Open the application on `http://localhost:${APP_PORT:-8000}`.
 - Set strong values for `COGITO_REVIEW_SESSION_SECRET`, `COGITO_REVIEW_SECRETS_ENCRYPTION_KEY`, and `COGITO_REVIEW_AGENT_CALLBACK_SECRET` in production
 - Prefer pinned image tags or digests over `latest`
 
+## Observability
+
+Cogito Review exposes Prometheus-compatible `/metrics` endpoints for self-hosted operations. You deploy and configure Prometheus (or any compatible scraper) yourself; this repository does not ship Prometheus, Grafana, or alerting rules.
+
+| Component | Endpoint | Notes |
+| --- | --- | --- |
+| API | `http://<api>:9090/metrics` | Application HTTP API stays on port `8000` |
+| Worker | `http://<worker>:9090/metrics` | Celery background jobs |
+| Operator | `http://<operator>:8080/metrics` | Kubernetes operator (HTTP by default) |
+
+In Docker Compose, port `9090` is available on the internal network only. Do not expose metrics through the application ingress.
+
+Basic configuration (API and worker):
+
+- `COGITO_REVIEW_METRICS_ENABLED` (default: `true`)
+- `COGITO_REVIEW_METRICS_BIND_HOST` (default: `0.0.0.0`)
+- `COGITO_REVIEW_METRICS_BIND_PORT` (default: `9090`)
+
+Agent review containers do not expose metrics in the current release.
+
+For the full metric catalog, scrape examples, and security notes, see the [observability guide](docs/observability.md). Product effectiveness analytics (PR time to merge, helpful rate, and similar) are documented separately in [metrics.md](docs/metrics.md).
+
 ## Images
 
 Published container images:
@@ -80,6 +135,7 @@ Published container images:
 ```bash
 docker pull ghcr.io/cogitoforge-ai/cogito-review:latest
 docker pull ghcr.io/cogitoforge-ai/cogito-review-agent:latest
+docker pull ghcr.io/cogitoforge-ai/cogito-review-operator:latest
 ```
 
 Production deployments should pin a version tag or image digest.
@@ -89,6 +145,9 @@ Production deployments should pin a version tag or image digest.
 For deeper technical and operational details:
 
 - [Deployment guide](docs/deployment.md)
+- [Observability (Prometheus metrics)](docs/observability.md)
+- [Kubernetes integration](docs/kubernetes.md)
 - [Security model](docs/security.md)
 - [RBAC model](docs/rbac.md)
 - [Architecture overview](docs/architecture-overview.md)
+- [Operator guide](operator/README.md)
