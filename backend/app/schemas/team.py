@@ -51,6 +51,10 @@ class TeamMemberCreate(BaseModel):
     role: str = Field(default="member", pattern="^(member|viewer|team_admin)$")
 
 
+class TeamMemberRoleUpdate(BaseModel):
+    role: str = Field(pattern="^(member|viewer|team_admin)$")
+
+
 class TeamListResponse(PaginatedResponse[TeamResponse]):
     pass
 

@@ -193,6 +193,37 @@ class TeamMemberRepository:
         )
         return {row["team_id"]: row["member_count"] for row in rows}
 
+    async def list_for_user(self, user_id: UUID) -> list[TeamMemberRow]:
+        rows = await self._conn.fetch(
+            """
+            SELECT tm.team_id, tm.user_id, r.key AS role, tm.created_at,
+                   u.email AS user_email, u.name AS user_name,
+                   t.name AS team_name
+            FROM team_members tm
+            JOIN rbac_roles r ON r.id = tm.role_id
+            JOIN users u ON u.id = tm.user_id
+            JOIN teams t ON t.id = tm.team_id
+            WHERE tm.user_id = $1
+            ORDER BY t.name ASC
+            """,
+            user_id,
+        )
+        return [_row_to_member(row) for row in rows]
+
+    async def count_team_admins(self, team_id: UUID) -> int:
+        return (
+            await self._conn.fetchval(
+                """
+                SELECT COUNT(*)::int
+                FROM team_members tm
+                JOIN rbac_roles r ON r.id = tm.role_id
+                WHERE tm.team_id = $1 AND r.key = 'team_admin'
+                """,
+                team_id,
+            )
+            or 0
+        )
+
     async def list_for_teams(self, team_ids: list[UUID]) -> list[TeamMemberRow]:
         if not team_ids:
             return []

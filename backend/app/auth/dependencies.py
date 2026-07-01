@@ -56,6 +56,11 @@ async def get_current_user(
         if user_id is not None:
             user = await UserRepository(conn).get(user_id)
             if user is not None:
+                if not user.is_active:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Account deactivated",
+                    )
                 return user
 
     if not settings.auth_enabled:

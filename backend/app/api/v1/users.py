@@ -7,12 +7,17 @@ from pydantic import BaseModel, Field
 from app.api.pagination import PaginationParams
 from app.auth.dependencies import require_org_action_dep
 from app.dependencies import get_conn
-from app.rbac.catalog import ActionKey, RoleKey
-from app.rbac.repositories import RbacRepository
-from app.repositories.users import UserRepository, UserRow
+from app.rbac.catalog import ActionKey
+from app.repositories.users import UserRow
 from app.schemas.auth import UserResponse
-from app.schemas.user import UserListResponse
-from app.services.users import list_users_paginated
+from app.schemas.user import UserDetailResponse, UserListResponse
+from app.services.users import (
+    deactivate_user,
+    get_user_detail,
+    list_users_paginated,
+    reactivate_user,
+    update_organization_role,
+)
 
 router = APIRouter()
 
@@ -21,9 +26,23 @@ class OrganizationRoleUpdate(BaseModel):
     role_key: str = Field(pattern="^(org_admin|org_member)$")
 
 
+def _user_response(user: UserRow) -> UserResponse:
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        is_org_admin=user.is_org_admin,
+        created_at=user.created_at,
+    )
+
+
 @router.get("", response_model=UserListResponse)
 async def list_users(
     q: str | None = Query(None, max_length=200),
+    auth_source: str | None = Query(None, pattern="^(sso|local)$"),
+    org_role: str | None = Query(None, pattern="^(org_admin|org_member)$"),
+    status: str | None = Query(None, pattern="^(active|deactivated)$"),
+    team_id: UUID | None = None,
     pagination: PaginationParams = Depends(),
     conn: asyncpg.Connection = Depends(get_conn),
     _user: UserRow = Depends(require_org_action_dep(ActionKey.USER_READ)),
@@ -31,48 +50,58 @@ async def list_users(
     return await list_users_paginated(
         conn,
         search=q,
+        auth_source=auth_source,
+        org_role=org_role,
+        status=status,
+        team_id=team_id,
         limit=pagination.limit,
         offset=pagination.offset,
     )
 
 
+@router.get("/{user_id}", response_model=UserDetailResponse)
+async def get_user(
+    user_id: UUID,
+    conn: asyncpg.Connection = Depends(get_conn),
+    _user: UserRow = Depends(require_org_action_dep(ActionKey.USER_READ)),
+) -> UserDetailResponse:
+    detail = await get_user_detail(conn, user_id)
+    if detail is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    return detail
+
+
 @router.put("/{user_id}/organization-role", response_model=UserResponse)
-async def update_organization_role(
+async def update_organization_role_route(
     user_id: UUID,
     payload: OrganizationRoleUpdate,
     conn: asyncpg.Connection = Depends(get_conn),
-    _admin: UserRow = Depends(require_org_action_dep(ActionKey.USER_ASSIGN_ORG_ADMIN)),
+    admin: UserRow = Depends(require_org_action_dep(ActionKey.USER_ASSIGN_ORG_ADMIN)),
 ) -> UserResponse:
-    user = await UserRepository(conn).get(user_id)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    if user.is_superuser and payload.role_key != RoleKey.ORG_ADMIN.value:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot demote superuser",
-        )
-    role = RoleKey(payload.role_key)
-    rbac = RbacRepository(conn)
-    before_roles = await rbac.get_organization_roles_for_user(user_id)
-    await rbac.set_organization_role(user_id, role)
-    from app.services.audit import log_audit_event
-
-    await log_audit_event(
+    user = await update_organization_role(
         conn,
-        actor_user_id=_admin.id,
-        event_type="organization_role.changed",
-        target_type="user",
-        target_id=str(user_id),
-        before_state={"roles": [r.role_key for r in before_roles]},
-        after_state={"role": payload.role_key},
+        actor=admin,
+        user_id=user_id,
+        role_key=payload.role_key,
     )
-    refreshed = await UserRepository(conn).get(user_id)
-    if refreshed is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    return UserResponse(
-        id=refreshed.id,
-        email=refreshed.email,
-        name=refreshed.name,
-        is_org_admin=refreshed.is_org_admin,
-        created_at=refreshed.created_at,
-    )
+    return _user_response(user)
+
+
+@router.post("/{user_id}/deactivate", response_model=UserResponse)
+async def deactivate_user_route(
+    user_id: UUID,
+    conn: asyncpg.Connection = Depends(get_conn),
+    admin: UserRow = Depends(require_org_action_dep(ActionKey.USER_DEACTIVATE)),
+) -> UserResponse:
+    user = await deactivate_user(conn, actor=admin, user_id=user_id)
+    return _user_response(user)
+
+
+@router.post("/{user_id}/reactivate", response_model=UserResponse)
+async def reactivate_user_route(
+    user_id: UUID,
+    conn: asyncpg.Connection = Depends(get_conn),
+    admin: UserRow = Depends(require_org_action_dep(ActionKey.USER_DEACTIVATE)),
+) -> UserResponse:
+    user = await reactivate_user(conn, actor=admin, user_id=user_id)
+    return _user_response(user)

@@ -71,6 +71,8 @@ def make_dev_user(**overrides: object) -> UserRow:
         "auth_source": "sso",
         "username": None,
         "is_superuser": False,
+        "is_active": True,
+        "last_login_at": None,
         "created_at": now,
     }
     defaults.update(overrides)

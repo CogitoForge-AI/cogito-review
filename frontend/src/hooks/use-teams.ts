@@ -158,14 +158,32 @@ export function useAddTeamMember(teamId: string) {
   })
 }
 
+export function useUpdateTeamMemberRole(teamId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { userId: string; role: TeamMemberCreate["role"] }) =>
+      api<TeamMember>(`/teams/${teamId}/members/${payload.userId}`, {
+        method: "PUT",
+        body: JSON.stringify({ role: payload.role }),
+      }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "members"] })
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["users", variables.userId] })
+      queryClient.invalidateQueries({ queryKey: ["teams"] })
+    },
+  })
+}
+
 export function useRemoveTeamMember(teamId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (userId: string) =>
       api<void>(`/teams/${teamId}/members/${userId}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (_data, userId) => {
       queryClient.invalidateQueries({ queryKey: ["teams", teamId, "members"] })
       queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["users", userId] })
       queryClient.invalidateQueries({ queryKey: ["teams"] })
     },
   })

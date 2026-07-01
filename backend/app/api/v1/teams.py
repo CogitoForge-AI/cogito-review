@@ -19,6 +19,7 @@ from app.schemas.team import (
     TeamMemberCreate,
     TeamMemberListResponse,
     TeamMemberResponse,
+    TeamMemberRoleUpdate,
     TeamResponse,
     TeamUpdate,
 )
@@ -31,6 +32,7 @@ from app.services.teams import (
     list_teams_paginated,
     remove_team_member,
     update_team,
+    update_team_member_role,
 )
 
 router = APIRouter()
@@ -139,6 +141,26 @@ async def post_team_member(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
+@router.put("/{team_id}/members/{user_id}", response_model=TeamMemberResponse)
+async def put_team_member_role(
+    team_id: UUID,
+    user_id: UUID,
+    payload: TeamMemberRoleUpdate,
+    conn: asyncpg.Connection = Depends(get_conn),
+    user=Depends(get_current_user),
+) -> TeamMemberResponse:
+    await require_permission(
+        user, conn, ActionKey.TEAM_MEMBER_UPDATE_ROLE, team_id=team_id
+    )
+    try:
+        return await update_team_member_role(conn, team_id, user_id, role=payload.role)
+    except ValueError as exc:
+        detail = str(exc)
+        if "not found" in detail:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
 @router.delete("/{team_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_team_member(
     team_id: UUID,
@@ -147,4 +169,7 @@ async def delete_team_member(
     user=Depends(get_current_user),
 ) -> None:
     await require_permission(user, conn, ActionKey.TEAM_MEMBER_REMOVE, team_id=team_id)
-    await remove_team_member(conn, team_id, user_id)
+    try:
+        await remove_team_member(conn, team_id, user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

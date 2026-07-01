@@ -22,6 +22,7 @@ from app.auth.state import consume_auth_state, create_auth_state
 from app.config import get_code_review_settings
 from app.dependencies import get_conn
 from app.rbac.catalog import ActionKey
+from app.repositories.users import UserRepository
 from app.schemas.auth import (
     MeResponse,
     PermissionsSummaryResponse,
@@ -39,6 +40,7 @@ from app.services.identity_provider import (
 )
 from app.services.install import authenticate_local_user
 from app.services.teams import list_users
+from app.services.users import assert_user_can_login
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,12 @@ def _user_response(user) -> UserResponse:
         is_org_admin=user.is_org_admin,
         created_at=user.created_at,
     )
+
+
+async def _complete_login(conn: asyncpg.Connection, user) -> str:
+    assert_user_can_login(user)
+    await UserRepository(conn).record_login(user.id)
+    return await create_session(user_id=user.id)
 
 
 def _resolve_redirect(state: str | None, frontend_url: str) -> str:
@@ -208,7 +216,7 @@ async def callback(
             detail=str(exc),
         ) from exc
 
-    session_id = await create_session(user_id=user.id)
+    session_id = await _complete_login(conn, user)
     redirect_url = _resolve_redirect(return_to, settings.frontend_url)
     redirect = RedirectResponse(url=redirect_url, status_code=302)
     return _apply_session_cookie(redirect, session_id)
@@ -288,7 +296,7 @@ async def saml_acs(
             detail=str(exc),
         ) from exc
 
-    session_id = await create_session(user_id=user.id)
+    session_id = await _complete_login(conn, user)
     redirect_url = _resolve_redirect(return_to, settings.frontend_url)
     redirect = RedirectResponse(url=redirect_url, status_code=302)
     return _apply_session_cookie(redirect, session_id)
@@ -349,7 +357,7 @@ async def local_login(
             detail="Invalid username or password",
         )
 
-    session_id = await create_session(user_id=user.id)
+    session_id = await _complete_login(conn, user)
     _set_json_session_cookie(response, session_id)
     settings = get_code_review_settings()
     team_ids = await get_accessible_team_ids(conn, user)

@@ -32,6 +32,7 @@ import {
   DEFAULT_LIST_SEARCH,
   DEFAULT_REPOSITORIES_SEARCH,
   DEFAULT_REVIEWS_SEARCH,
+  DEFAULT_USERS_SEARCH,
 } from "@/lib/pagination"
 import { cn } from "@/lib/utils"
 
@@ -278,7 +279,7 @@ function AppNavLink({ item }: { item: NavLinkItem }) {
       return (
         <Link
           to="/users"
-          search={DEFAULT_LIST_SEARCH}
+          search={DEFAULT_USERS_SEARCH}
           className={navLinkClassName}
           activeOptions={activeOptions}
           activeProps={activeProps}

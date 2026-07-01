@@ -39,6 +39,15 @@ export function parsePageSearch(search: Record<string, unknown>): {
 
 export const DEFAULT_LIST_SEARCH = { page: 1, q: "" } as const
 
+export const DEFAULT_USERS_SEARCH = {
+  page: 1,
+  q: "",
+  auth_source: "all" as const,
+  org_role: "all" as const,
+  status: "all" as const,
+  team_id: "",
+} as const
+
 export const DEFAULT_REVIEWS_SEARCH = {
   page: 1,
   q: "",
