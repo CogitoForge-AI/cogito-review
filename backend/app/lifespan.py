@@ -3,10 +3,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.config import get_settings
-from app.rbac.repositories import PermissionCache
 from app.database import close_db_pool, init_db_pool
 from app.observability.server import start_metrics_server_if_enabled
+from app.rbac.repositories import PermissionCache
 from app.services.provider_resolution import sync_opencode_config_from_db
 
 
